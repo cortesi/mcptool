@@ -1,15 +1,14 @@
 use clap::Parser;
-use rustyline::{error::ReadlineError, DefaultEditor};
-use tenx_mcp::{schema::ServerNotification, ClientConn, ClientCtx, Result as McpResult};
+use rustyline::{DefaultEditor, error::ReadlineError};
+use tenx_mcp::{ClientConn, ClientCtx, Result as McpResult, schema::ServerNotification};
 use tokio::sync::mpsc;
 
 use crate::{
-    client,
-    command::{execute_mcp_command_with_client, generate_repl_help, ReplCommandWrapper},
+    Result, client,
+    command::{ReplCommandWrapper, execute_mcp_command_with_client, generate_repl_help},
     ctx::Ctx,
     output::initresult,
     target::Target,
-    Result,
 };
 
 #[derive(Clone)]
@@ -51,7 +50,8 @@ pub async fn connect_command(ctx: &Ctx, target: String) -> Result<()> {
         .text("Type 'help' for available commands, 'quit' to exit\n")?;
 
     // Channel for user input from blocking thread
-    let (input_tx, mut input_rx) = mpsc::unbounded_channel::<Result<String, ReadlineError>>();
+    let (input_tx, mut input_rx) =
+        mpsc::unbounded_channel::<std::result::Result<String, ReadlineError>>();
 
     // Spawn blocking thread to handle readline with history support
     std::thread::spawn({
