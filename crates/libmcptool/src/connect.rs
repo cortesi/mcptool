@@ -3,6 +3,8 @@ use rustyline::{DefaultEditor, error::ReadlineError};
 use tenx_mcp::{ClientConn, ClientCtx, Result as McpResult, schema::ServerNotification};
 use tokio::sync::mpsc;
 
+use std::sync::mpsc as std_mpsc;
+
 use crate::{
     Result, client,
     command::{ReplCommandWrapper, execute_mcp_command_with_client, generate_repl_help},
@@ -52,10 +54,13 @@ pub async fn connect_command(ctx: &Ctx, target: String) -> Result<()> {
     // Channel for user input from blocking thread
     let (input_tx, mut input_rx) =
         mpsc::unbounded_channel::<std::result::Result<String, ReadlineError>>();
+    // Channel to signal when the prompt should be shown again
+    let (prompt_tx, prompt_rx) = std_mpsc::channel::<()>();
 
     // Spawn blocking thread to handle readline with history support
     std::thread::spawn({
         let input_tx = input_tx.clone();
+        let prompt_rx = prompt_rx;
         move || {
             let mut rl = DefaultEditor::new().expect("Failed to create readline editor");
             loop {
@@ -67,6 +72,10 @@ pub async fn connect_command(ctx: &Ctx, target: String) -> Result<()> {
                         }
                         rl.add_history_entry(line.clone()).ok();
                         if input_tx.send(Ok(line)).is_err() {
+                            break;
+                        }
+                        // wait for main thread to signal before showing the prompt again
+                        if prompt_rx.recv().is_err() {
                             break;
                         }
                     }
@@ -132,6 +141,8 @@ pub async fn connect_command(ctx: &Ctx, target: String) -> Result<()> {
                                 }
                             }
                         }
+                        // signal the input thread to show the prompt again
+                        let _ = prompt_tx.send(());
                     }
                     Some(Err(ReadlineError::Interrupted)) => {
                         ctx.output.text("CTRL-C")?;
