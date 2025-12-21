@@ -1,5 +1,5 @@
 use clap::{Args, CommandFactory, Parser, Subcommand};
-use tenx_mcp::{Client, ClientConn, schema::InitializeResult};
+use tmcp::{Client, ClientConn, schema::InitializeResult};
 
 use crate::{Result, client, ctx::Ctx, mcp, target::Target};
 

@@ -4,7 +4,7 @@ use crate::output::Output;
 /// Display the list of prompts in either JSON or formatted text
 pub fn list_prompts_result(
     output: &Output,
-    prompts_result: &tenx_mcp::schema::ListPromptsResult,
+    prompts_result: &tmcp::schema::ListPromptsResult,
 ) -> Result<()> {
     if output.json {
         // Output as JSON
@@ -27,27 +27,27 @@ pub fn list_prompts_result(
                 }
 
                 // Arguments
-                if let Some(arguments) = &prompt.arguments {
-                    if !arguments.is_empty() {
+                if let Some(arguments) = &prompt.arguments
+                    && !arguments.is_empty()
+                {
+                    let out = out.indent();
+                    out.h2("Arguments")?;
+                    let out = out.indent();
+
+                    for arg in arguments {
+                        // Use the argument name from the struct
+                        out.kv(&arg.name, "")?;
+
                         let out = out.indent();
-                        out.h2("Arguments")?;
-                        let out = out.indent();
 
-                        for arg in arguments {
-                            // Use the argument name from the struct
-                            out.kv(&arg.name, "")?;
+                        // Show required marker if required
+                        if let Some(true) = arg.required {
+                            out.note("[required]")?;
+                        }
 
-                            let out = out.indent();
-
-                            // Show required marker if required
-                            if let Some(true) = arg.required {
-                                out.note("[required]")?;
-                            }
-
-                            // Show description if available
-                            if let Some(description) = &arg.description {
-                                out.text(description)?;
-                            }
+                        // Show description if available
+                        if let Some(description) = &arg.description {
+                            out.text(description)?;
                         }
                     }
                 }

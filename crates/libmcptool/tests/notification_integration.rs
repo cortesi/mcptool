@@ -1,8 +1,8 @@
 use std::time::Duration;
 
 use libmcptool::{client, ctx::Ctx, target::Target};
-use tenx_mcp::schema::{ClientNotification, ServerNotification};
-use tenx_mcp::{
+use tmcp::schema::{ClientNotification, ServerNotification};
+use tmcp::{
     ClientConn, ClientCtx, Result as McpResult, Server, ServerAPI, ServerConn, ServerCtx,
     schema::{LoggingLevel, ServerCapabilities},
 };
@@ -25,10 +25,10 @@ impl ServerConn for SimpleTestServerConn {
         &self,
         _context: &ServerCtx,
         _protocol_version: String,
-        _capabilities: tenx_mcp::schema::ClientCapabilities,
-        _client_info: tenx_mcp::schema::Implementation,
-    ) -> McpResult<tenx_mcp::schema::InitializeResult> {
-        Ok(tenx_mcp::schema::InitializeResult::new("test-server").with_version("1.0.0"))
+        _capabilities: tmcp::schema::ClientCapabilities,
+        _client_info: tmcp::schema::Implementation,
+    ) -> McpResult<tmcp::schema::InitializeResult> {
+        Ok(tmcp::schema::InitializeResult::new("test-server").with_version("1.0.0"))
     }
 
     async fn set_level(&self, context: &ServerCtx, level: LoggingLevel) -> McpResult<()> {
@@ -77,6 +77,11 @@ async fn test_set_level_command_notifications_via_tcp() -> Result<(), Box<dyn st
     let (client_notification_sender, mut client_notification_receiver) = mpsc::unbounded_channel();
     let (server_notification_sender, mut server_notification_receiver) = mpsc::unbounded_channel();
 
+    // Get a random available port
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await?;
+    let port = listener.local_addr()?.port();
+    drop(listener); // Release the port so server can bind to it
+
     // Start simple test server
     let server = Server::default()
         .with_connection(move || SimpleTestServerConn {
@@ -84,15 +89,16 @@ async fn test_set_level_command_notifications_via_tcp() -> Result<(), Box<dyn st
         })
         .with_capabilities(ServerCapabilities::default().with_tools(Some(true)));
 
+    let addr = format!("127.0.0.1:{}", port);
     let server_handle = tokio::spawn(async move {
-        server.serve_tcp("127.0.0.1:8080").await.unwrap();
+        server.serve_tcp(&addr).await.unwrap();
     });
 
     // Wait a bit for server to start
     tokio::time::sleep(Duration::from_millis(100)).await;
 
     // Connect to the testserver via TCP
-    let target = Target::parse("tcp://127.0.0.1:8080")?;
+    let target = Target::parse(&format!("tcp://127.0.0.1:{}", port))?;
     let (mut client, _init_result) = client::get_client_with_connection(
         &ctx,
         &target,

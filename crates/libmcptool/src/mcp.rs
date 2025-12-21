@@ -1,4 +1,4 @@
-use tenx_mcp::{
+use tmcp::{
     Client, ClientConn, ServerAPI,
     schema::{InitializeResult, LoggingLevel},
 };
@@ -234,11 +234,11 @@ pub async fn complete<C: ClientConn + 'static>(
 
     // Parse the reference into Reference
     let completion_ref = if reference.starts_with("resource://") {
-        tenx_mcp::schema::Reference::Resource(tenx_mcp::schema::ResourceReference {
+        tmcp::schema::Reference::Resource(tmcp::schema::ResourceReference {
             uri: reference.to_string(),
         })
     } else if reference.starts_with("prompt://") {
-        tenx_mcp::schema::Reference::Prompt(tenx_mcp::schema::PromptReference {
+        tmcp::schema::Reference::Prompt(tmcp::schema::PromptReference {
             name: reference
                 .strip_prefix("prompt://")
                 .unwrap_or(reference)
@@ -252,7 +252,7 @@ pub async fn complete<C: ClientConn + 'static>(
         )));
     };
 
-    let argument_info = tenx_mcp::schema::ArgumentInfo {
+    let argument_info = tmcp::schema::ArgumentInfo {
         name: argument.to_string(),
         value: "".to_string(),
     };

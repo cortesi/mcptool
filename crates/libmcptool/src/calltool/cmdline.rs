@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use tenx_mcp::Arguments;
+use tmcp::Arguments;
 
 use crate::Result;
 

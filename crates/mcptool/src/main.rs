@@ -200,7 +200,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             println!("mcptool version {}", ctx::VERSION);
             println!(
                 "MCP protocol version: {}",
-                tenx_mcp::schema::LATEST_PROTOCOL_VERSION
+                tmcp::schema::LATEST_PROTOCOL_VERSION
             );
         }
 

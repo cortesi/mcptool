@@ -9,7 +9,7 @@ repository.workspace = true
 keywords.workspace = true
 
 [dependencies]
-tenx-mcp = { git = "https://github.com/tenxhq/tenx-mcp.git", rev = "94da224"}
+tmcp = { path = "../../../tmcp/crates/tmcp" }
 
 shell-words = "1.1"
 rustyline = "16.0"

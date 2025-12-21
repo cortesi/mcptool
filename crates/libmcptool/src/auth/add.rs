@@ -1,7 +1,7 @@
 use std::time::{Duration, SystemTime};
 
 use rustyline::DefaultEditor;
-use tenx_mcp::auth::{OAuth2CallbackServer, OAuth2Client, OAuth2Config};
+use tmcp::auth::{OAuth2CallbackServer, OAuth2Client, OAuth2Config};
 use tokio::time::timeout;
 
 use crate::{Error, Result, auth::validate_auth_name, ctx::Ctx, storage::StoredAuth};
@@ -315,7 +315,7 @@ async fn wait_for_callback(
     oauth_client: &mut OAuth2Client,
     callback_server: OAuth2CallbackServer,
     expected_state: String,
-) -> Result<tenx_mcp::auth::OAuth2Token> {
+) -> Result<tmcp::auth::OAuth2Token> {
     // Wait for the OAuth callback
     let (code, state) = callback_server.wait_for_callback().await?;
 
@@ -336,7 +336,7 @@ async fn wait_for_manual_callback(
     oauth_client: &mut OAuth2Client,
     expected_state: String,
     output: &crate::output::Output,
-) -> Result<tenx_mcp::auth::OAuth2Token> {
+) -> Result<tmcp::auth::OAuth2Token> {
     let mut rl = DefaultEditor::new()?;
 
     output.text("")?;

@@ -2,10 +2,7 @@ use crate::Result;
 use crate::output::Output;
 
 /// Display the InitializeResult in either JSON or formatted text
-pub fn init_result(
-    output: &Output,
-    init_result: &tenx_mcp::schema::InitializeResult,
-) -> Result<()> {
+pub fn init_result(output: &Output, init_result: &tmcp::schema::InitializeResult) -> Result<()> {
     if output.json {
         // Output as JSON
         output.json_value(init_result)?;
@@ -93,17 +90,17 @@ pub fn init_result(
             }
 
             // Experimental capabilities
-            if let Some(experimental) = &init_result.capabilities.experimental {
-                if !experimental.is_empty() {
-                    out.text("")?;
-                    out.h3("Experimental Features")?;
-                    let out = out.indent();
-                    for (key, value) in experimental {
-                        // Format the value as a pretty JSON string
-                        let value_str = serde_json::to_string_pretty(value)
-                            .unwrap_or_else(|_| value.to_string());
-                        out.kv(key, &value_str)?;
-                    }
+            if let Some(experimental) = &init_result.capabilities.experimental
+                && !experimental.is_empty()
+            {
+                out.text("")?;
+                out.h3("Experimental Features")?;
+                let out = out.indent();
+                for (key, value) in experimental {
+                    // Format the value as a pretty JSON string
+                    let value_str =
+                        serde_json::to_string_pretty(value).unwrap_or_else(|_| value.to_string());
+                    out.kv(key, &value_str)?;
                 }
             }
         }

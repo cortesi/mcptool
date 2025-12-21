@@ -4,7 +4,7 @@ use std::sync::{Arc, Mutex};
 
 use rustyline::DefaultEditor;
 use serde::{Deserialize, Serialize};
-use tenx_mcp::{
+use tmcp::{
     Error, Result, Server, ServerConn, ServerCtx,
     schema::{
         ClientCapabilities, ClientNotification, Cursor, InitializeResult, ListPromptsResult,
@@ -67,7 +67,7 @@ impl TestServerState {
         &self,
         context: &ServerCtx,
         remote_addr: String,
-        client_info: tenx_mcp::schema::Implementation,
+        client_info: tmcp::schema::Implementation,
     ) {
         let client_id = format!(
             "{}_{}",
@@ -217,7 +217,7 @@ impl ServerConn for TestServerConn {
         context: &ServerCtx,
         protocol_version: String,
         capabilities: ClientCapabilities,
-        client_info: tenx_mcp::schema::Implementation,
+        client_info: tmcp::schema::Implementation,
     ) -> Result<InitializeResult> {
         self.state.request_counter.fetch_add(1, Ordering::Relaxed);
         let _ = self.state.output.h1("initialize");
@@ -300,8 +300,8 @@ impl ServerConn for TestServerConn {
         &self,
         context: &ServerCtx,
         name: String,
-        arguments: Option<tenx_mcp::Arguments>,
-    ) -> Result<tenx_mcp::schema::CallToolResult> {
+        arguments: Option<tmcp::Arguments>,
+    ) -> Result<tmcp::schema::CallToolResult> {
         let _ = self.state.output.h1("call_tool");
         let params = serde_json::json!({
             "name": name,
@@ -336,7 +336,7 @@ impl ServerConn for TestServerConn {
             .unwrap_or_else(|| "No message provided".to_string());
 
         let result =
-            tenx_mcp::schema::CallToolResult::new().with_text_content(format!("Echo: {message}"));
+            tmcp::schema::CallToolResult::new().with_text_content(format!("Echo: {message}"));
 
         let _ = self.state.output.text(format!(
             "result: {}",
@@ -498,8 +498,8 @@ impl ServerConn for TestServerConn {
         &self,
         _context: &ServerCtx,
         name: String,
-        arguments: Option<tenx_mcp::Arguments>,
-    ) -> Result<tenx_mcp::schema::GetPromptResult> {
+        arguments: Option<tmcp::Arguments>,
+    ) -> Result<tmcp::schema::GetPromptResult> {
         let _ = self.state.output.h1("get_prompt");
         let params = serde_json::json!({
             "name": name,
@@ -526,9 +526,9 @@ impl ServerConn for TestServerConn {
                     _ => format!("Hey {name}! What's up?"),
                 };
 
-                tenx_mcp::schema::GetPromptResult::new()
+                tmcp::schema::GetPromptResult::new()
                     .with_description("A personalized greeting")
-                    .with_message(tenx_mcp::schema::PromptMessage::user_text(message))
+                    .with_message(tmcp::schema::PromptMessage::user_text(message))
             }
             "code_review" => {
                 let language = arguments
@@ -544,9 +544,9 @@ impl ServerConn for TestServerConn {
                     "Please review the following {language} code:\n\n```{language}\n{code}\n```\n\nProvide feedback on code quality, potential bugs, and improvements."
                 );
 
-                tenx_mcp::schema::GetPromptResult::new()
+                tmcp::schema::GetPromptResult::new()
                     .with_description("Code review request")
-                    .with_message(tenx_mcp::schema::PromptMessage::user_text(review))
+                    .with_message(tmcp::schema::PromptMessage::user_text(review))
             }
             _ => return Err(Error::MethodNotFound(format!("Unknown prompt: {name}"))),
         };
@@ -683,7 +683,7 @@ impl ServerConn for TestServerConn {
         &self,
         _context: &ServerCtx,
         cursor: Option<Cursor>,
-    ) -> Result<tenx_mcp::schema::ListResourceTemplatesResult> {
+    ) -> Result<tmcp::schema::ListResourceTemplatesResult> {
         let _ = self.state.output.h1("list_resource_templates");
         let params = serde_json::json!({
             "cursor": cursor,
@@ -694,7 +694,7 @@ impl ServerConn for TestServerConn {
         ));
 
         // Create sample resource templates
-        let user_template = tenx_mcp::schema::ResourceTemplate::new(
+        let user_template = tmcp::schema::ResourceTemplate::new(
             "user-profile",
             "user://testserver/{user_id}/profile",
         )
@@ -703,17 +703,17 @@ impl ServerConn for TestServerConn {
         .with_mime_type("application/json");
 
         let log_template =
-            tenx_mcp::schema::ResourceTemplate::new("dated-log", "log://testserver/{date}/entries")
+            tmcp::schema::ResourceTemplate::new("dated-log", "log://testserver/{date}/entries")
                 .with_title("Daily Log Entries")
                 .with_description("Server log entries for a specific date (YYYY-MM-DD)")
                 .with_mime_type("text/plain")
                 .with_annotations(
-                    tenx_mcp::schema::Annotations::new()
+                    tmcp::schema::Annotations::new()
                         .with_priority(0.8)
-                        .with_audience(vec![tenx_mcp::schema::Role::Assistant]),
+                        .with_audience(vec![tmcp::schema::Role::Assistant]),
                 );
 
-        let config_template = tenx_mcp::schema::ResourceTemplate::new(
+        let config_template = tmcp::schema::ResourceTemplate::new(
             "config-section",
             "config://testserver/{section}/{key}",
         )
@@ -721,7 +721,7 @@ impl ServerConn for TestServerConn {
         .with_description("Access configuration values by section and key")
         .with_mime_type("text/plain");
 
-        let metrics_template = tenx_mcp::schema::ResourceTemplate::new(
+        let metrics_template = tmcp::schema::ResourceTemplate::new(
             "metric-history",
             "metrics://testserver/{metric_name}/history?period={period}",
         )
@@ -729,12 +729,12 @@ impl ServerConn for TestServerConn {
         .with_description("Historical data for a specific metric (period: 1h, 1d, 1w)")
         .with_mime_type("application/json")
         .with_annotations(
-            tenx_mcp::schema::Annotations::new()
+            tmcp::schema::Annotations::new()
                 .with_priority(0.5)
                 .with_last_modified(chrono::Local::now().to_rfc3339()),
         );
 
-        let result = tenx_mcp::schema::ListResourceTemplatesResult::default()
+        let result = tmcp::schema::ListResourceTemplatesResult::default()
             .with_resource_template(user_template)
             .with_resource_template(log_template)
             .with_resource_template(config_template)
@@ -1149,7 +1149,7 @@ pub async fn run_test_server(
     let _ = output.text(format!("Version: {}", env!("CARGO_PKG_VERSION")));
     let _ = output.text(format!(
         "Protocol: {}",
-        tenx_mcp::schema::LATEST_PROTOCOL_VERSION
+        tmcp::schema::LATEST_PROTOCOL_VERSION
     ));
 
     // Create shared request counter for interactive mode

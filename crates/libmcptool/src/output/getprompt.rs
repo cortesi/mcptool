@@ -1,4 +1,4 @@
-use tenx_mcp::schema::GetPromptResult;
+use tmcp::schema::GetPromptResult;
 
 use super::formatter::{MetadataDisplay, OutputFormatter, format_output};
 use crate::Result;
@@ -17,10 +17,10 @@ impl OutputFormatter<GetPromptResult> for GetPromptFormatter {
             output.text(format!("Role: {:?}", message.role))?;
 
             match &message.content {
-                tenx_mcp::schema::Content::Text(text_content) => {
+                tmcp::schema::Content::Text(text_content) => {
                     MetadataDisplay::display_text_content(output, &text_content.text)?;
                 }
-                tenx_mcp::schema::Content::Image(image_content) => {
+                tmcp::schema::Content::Image(image_content) => {
                     output.text(format!("Image content (MIME: {})", image_content.mime_type))?;
                     MetadataDisplay::display_binary_content(
                         output,
@@ -28,7 +28,7 @@ impl OutputFormatter<GetPromptResult> for GetPromptFormatter {
                         image_content.data.len(),
                     )?;
                 }
-                tenx_mcp::schema::Content::Audio(audio_content) => {
+                tmcp::schema::Content::Audio(audio_content) => {
                     output.text(format!("Audio content (MIME: {})", audio_content.mime_type))?;
                     MetadataDisplay::display_binary_content(
                         output,
@@ -36,15 +36,15 @@ impl OutputFormatter<GetPromptResult> for GetPromptFormatter {
                         audio_content.data.len(),
                     )?;
                 }
-                tenx_mcp::schema::Content::Resource(resource) => {
+                tmcp::schema::Content::Resource(resource) => {
                     output.text("Embedded resource:")?;
                     match &resource.resource {
-                        tenx_mcp::schema::ResourceContents::Text(text_resource) => {
+                        tmcp::schema::ResourceContents::Text(text_resource) => {
                             MetadataDisplay::display_uri(output, &text_resource.uri)?;
                             MetadataDisplay::display_mime_type(output, &text_resource.mime_type)?;
                             MetadataDisplay::display_text_content(output, &text_resource.text)?;
                         }
-                        tenx_mcp::schema::ResourceContents::Blob(blob_resource) => {
+                        tmcp::schema::ResourceContents::Blob(blob_resource) => {
                             MetadataDisplay::display_uri(output, &blob_resource.uri)?;
                             MetadataDisplay::display_mime_type(output, &blob_resource.mime_type)?;
                             MetadataDisplay::display_binary_content(
@@ -55,7 +55,7 @@ impl OutputFormatter<GetPromptResult> for GetPromptFormatter {
                         }
                     }
                 }
-                tenx_mcp::schema::Content::ResourceLink(resource_link) => {
+                tmcp::schema::Content::ResourceLink(resource_link) => {
                     output.text("Resource link:")?;
                     MetadataDisplay::display_uri(output, &resource_link.uri)?;
                     output.text(format!("Name: {}", resource_link.name))?;

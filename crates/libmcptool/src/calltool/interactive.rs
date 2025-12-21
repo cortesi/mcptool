@@ -1,19 +1,19 @@
 use std::collections::HashMap;
 use std::io::{self, BufRead, Write};
 
-use tenx_mcp::Arguments;
+use tmcp::Arguments;
 
 use crate::Result;
 
 pub fn parse_interactive_arguments(
-    tool: &tenx_mcp::schema::Tool,
+    tool: &tmcp::schema::Tool,
     output: &crate::output::Output,
 ) -> Result<Option<Arguments>> {
     parse_interactive_arguments_with_io(tool, output, &mut io::stdin().lock(), &mut io::stdout())
 }
 
 fn parse_interactive_arguments_with_io<R: BufRead, W: Write>(
-    tool: &tenx_mcp::schema::Tool,
+    tool: &tmcp::schema::Tool,
     output: &crate::output::Output,
     reader: &mut R,
     writer: &mut W,
@@ -140,7 +140,7 @@ fn parse_interactive_arguments_with_io<R: BufRead, W: Write>(
 mod tests {
     use std::io::Cursor;
 
-    use tenx_mcp::schema::{Tool, ToolSchema};
+    use tmcp::schema::{Tool, ToolSchema};
 
     use super::*;
     use crate::output::Output;

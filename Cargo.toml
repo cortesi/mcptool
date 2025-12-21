@@ -5,7 +5,7 @@ edition = "2024"
 authors = ["Aldo Cortesi <aldo@corte.si>"]
 description = "A swiss army knife for MCP"
 license = "MIT"
-repository = "https://github.com/tenxhq/mcptool"
+repository = "https://github.com/cortesi/mcptool"
 keywords = ["mcp", "anthropic", "claude", "openai", "llm", "cli"]
 
 [workspace]

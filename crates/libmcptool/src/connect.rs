@@ -1,6 +1,6 @@
 use clap::Parser;
 use rustyline::DefaultEditor;
-use tenx_mcp::{ClientConn, ClientCtx, Result as McpResult, schema::ServerNotification};
+use tmcp::{ClientConn, ClientCtx, Result as McpResult, schema::ServerNotification};
 use tokio::sync::mpsc;
 
 use crate::{

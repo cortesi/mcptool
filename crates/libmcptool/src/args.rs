@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use serde_json::Value;
-use tenx_mcp::Arguments;
+use tmcp::Arguments;
 
 use crate::{Error, Result};
 
@@ -56,10 +56,10 @@ impl ArgumentParser {
         }
 
         // Try to parse as float
-        if let Ok(num) = value.parse::<f64>() {
-            if let Some(json_num) = serde_json::Number::from_f64(num) {
-                return Value::Number(json_num);
-            }
+        if let Ok(num) = value.parse::<f64>()
+            && let Some(json_num) = serde_json::Number::from_f64(num)
+        {
+            return Value::Number(json_num);
         }
 
         // Default to string

@@ -1,4 +1,4 @@
-use tenx_mcp::schema::CompleteResult;
+use tmcp::schema::CompleteResult;
 
 use super::formatter::{OutputFormatter, format_output};
 use crate::Result;

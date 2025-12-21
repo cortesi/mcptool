@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::io::{self, BufRead};
 
-use tenx_mcp::Arguments;
+use tmcp::Arguments;
 
 use crate::Result;
 

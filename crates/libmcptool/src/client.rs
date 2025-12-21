@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
-use tenx_mcp::auth::{OAuth2Client, OAuth2Config};
-use tenx_mcp::{Client, ClientConn, schema::InitializeResult};
+use tmcp::auth::{OAuth2Client, OAuth2Config};
+use tmcp::{Client, ClientConn, schema::InitializeResult};
 
 use crate::ctx::VERSION;
 use crate::{Error, Result, ctx::Ctx, target::Target, utils::TimedFuture};
@@ -53,13 +53,13 @@ async fn connect_with_auth<C: ClientConn + Send + 'static>(
 
     let storage = ctx.storage()?;
     let auth = storage.get_auth(auth_name)?;
-    if let Some(expires_at) = auth.expires_at {
-        if expires_at <= std::time::SystemTime::now() {
-            return Err(Error::Other(
-                "Access token has expired. Please re-authenticate with 'mcptool auth add/renew'"
-                    .to_string(),
-            ));
-        }
+    if let Some(expires_at) = auth.expires_at
+        && expires_at <= std::time::SystemTime::now()
+    {
+        return Err(Error::Other(
+            "Access token has expired. Please re-authenticate with 'mcptool auth add/renew'"
+                .to_string(),
+        ));
     }
 
     // Create OAuth config
@@ -80,7 +80,7 @@ async fn connect_with_auth<C: ClientConn + Send + 'static>(
 
     // Set the stored tokens if available
     if let Some(access_token) = auth.access_token {
-        let token = tenx_mcp::auth::OAuth2Token {
+        let token = tmcp::auth::OAuth2Token {
             access_token,
             refresh_token: auth.refresh_token,
             expires_at: auth.expires_at.map(|system_time| {

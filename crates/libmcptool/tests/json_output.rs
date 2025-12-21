@@ -15,16 +15,15 @@ fn test_list_tools_result_json_output() {
         }),
     );
 
-    let input_schema = tenx_mcp::schema::ToolSchema {
+    let input_schema = tmcp::schema::ToolSchema {
         schema_type: "object".to_string(),
         properties: Some(properties),
         required: Some(vec!["param1".to_string()]),
     };
 
-    let tool =
-        tenx_mcp::schema::Tool::new("test_tool", input_schema).with_description("A test tool");
+    let tool = tmcp::schema::Tool::new("test_tool", input_schema).with_description("A test tool");
 
-    let tools_result = tenx_mcp::schema::ListToolsResult {
+    let tools_result = tmcp::schema::ListToolsResult {
         tools: vec![tool],
         next_cursor: None,
     };
@@ -43,7 +42,7 @@ fn test_list_tools_result_json_output() {
 #[test]
 fn test_list_tools_result_empty_tools() {
     // Create an empty ListToolsResult
-    let tools_result = tenx_mcp::schema::ListToolsResult {
+    let tools_result = tmcp::schema::ListToolsResult {
         tools: vec![],
         next_cursor: None,
     };

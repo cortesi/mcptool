@@ -2,7 +2,7 @@ use crate::Result;
 use crate::output::Output;
 
 /// Display the result of calling a tool in either JSON or formatted text
-pub fn call_tool_result(output: &Output, result: &tenx_mcp::schema::CallToolResult) -> Result<()> {
+pub fn call_tool_result(output: &Output, result: &tmcp::schema::CallToolResult) -> Result<()> {
     if output.json {
         output.json_value(result)?;
     } else {
@@ -53,9 +53,9 @@ pub fn call_tool_result(output: &Output, result: &tenx_mcp::schema::CallToolResu
     Ok(())
 }
 
-fn display_content(output: &Output, content: &tenx_mcp::schema::Content) -> Result<()> {
+fn display_content(output: &Output, content: &tmcp::schema::Content) -> Result<()> {
     match content {
-        tenx_mcp::schema::Content::Text(text_content) => {
+        tmcp::schema::Content::Text(text_content) => {
             output.kv("Type", "Text")?;
             let out = output.indent();
 
@@ -69,7 +69,7 @@ fn display_content(output: &Output, content: &tenx_mcp::schema::Content) -> Resu
                 display_annotations(&out, annotations)?;
             }
         }
-        tenx_mcp::schema::Content::Image(image_content) => {
+        tmcp::schema::Content::Image(image_content) => {
             output.kv("Type", "Image")?;
             let out = output.indent();
             out.kv("MIME Type", &image_content.mime_type)?;
@@ -80,7 +80,7 @@ fn display_content(output: &Output, content: &tenx_mcp::schema::Content) -> Resu
                 display_annotations(&out, annotations)?;
             }
         }
-        tenx_mcp::schema::Content::Audio(audio_content) => {
+        tmcp::schema::Content::Audio(audio_content) => {
             output.kv("Type", "Audio")?;
             let out = output.indent();
             out.kv("MIME Type", &audio_content.mime_type)?;
@@ -91,7 +91,7 @@ fn display_content(output: &Output, content: &tenx_mcp::schema::Content) -> Resu
                 display_annotations(&out, annotations)?;
             }
         }
-        tenx_mcp::schema::Content::Resource(resource) => {
+        tmcp::schema::Content::Resource(resource) => {
             output.kv("Type", "Embedded Resource")?;
             let out = output.indent();
             display_resource_contents(&out, &resource.resource)?;
@@ -101,7 +101,7 @@ fn display_content(output: &Output, content: &tenx_mcp::schema::Content) -> Resu
                 display_annotations(&out, annotations)?;
             }
         }
-        tenx_mcp::schema::Content::ResourceLink(resource_link) => {
+        tmcp::schema::Content::ResourceLink(resource_link) => {
             output.kv("Type", "Resource Link")?;
             let out = output.indent();
             out.kv("Name", &resource_link.name)?;
@@ -134,10 +134,10 @@ fn display_content(output: &Output, content: &tenx_mcp::schema::Content) -> Resu
 
 fn display_resource_contents(
     output: &Output,
-    contents: &tenx_mcp::schema::ResourceContents,
+    contents: &tmcp::schema::ResourceContents,
 ) -> Result<()> {
     match contents {
-        tenx_mcp::schema::ResourceContents::Text(text_contents) => {
+        tmcp::schema::ResourceContents::Text(text_contents) => {
             output.kv("Resource Type", "Text")?;
             output.kv("URI", &text_contents.uri)?;
 
@@ -153,7 +153,7 @@ fn display_resource_contents(
                 out.text(line)?;
             }
         }
-        tenx_mcp::schema::ResourceContents::Blob(blob_contents) => {
+        tmcp::schema::ResourceContents::Blob(blob_contents) => {
             output.kv("Resource Type", "Blob")?;
             output.kv("URI", &blob_contents.uri)?;
 
@@ -167,7 +167,7 @@ fn display_resource_contents(
     Ok(())
 }
 
-fn display_annotations(output: &Output, annotations: &tenx_mcp::schema::Annotations) -> Result<()> {
+fn display_annotations(output: &Output, annotations: &tmcp::schema::Annotations) -> Result<()> {
     output.h3("Annotations")?;
     let out = output.indent();
 
@@ -175,8 +175,8 @@ fn display_annotations(output: &Output, annotations: &tenx_mcp::schema::Annotati
         let audience_str = audience
             .iter()
             .map(|role| match role {
-                tenx_mcp::schema::Role::User => "User",
-                tenx_mcp::schema::Role::Assistant => "Assistant",
+                tmcp::schema::Role::User => "User",
+                tmcp::schema::Role::Assistant => "Assistant",
             })
             .collect::<Vec<_>>()
             .join(", ");

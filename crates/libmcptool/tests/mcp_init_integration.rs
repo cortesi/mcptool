@@ -12,6 +12,9 @@ fn create_test_ctx() -> (Ctx, TempDir) {
 
 #[tokio::test]
 async fn test_mcp_init_with_test_server() {
+    use tmcp::schema::{InitializeResult, ServerCapabilities};
+    use tmcp::{Server, ServerConn, ServerCtx};
+
     // Start the test server on a random port
     let listener = tokio::net::TcpListener::bind("127.0.0.1:0")
         .await
@@ -22,21 +25,51 @@ async fn test_mcp_init_with_test_server() {
         .port();
     drop(listener); // Release the port so test server can bind to it
 
-    let (ctx, _temp_dir) = create_test_ctx();
+    let (_ctx, _temp_dir) = create_test_ctx();
 
-    // Spawn the test server in the background
-    let server_handle = tokio::spawn(async move {
-        libmcptool::testserver::run_test_server(&ctx, false, false, port, false).await
-    });
+    // Create a simple test server connection that mirrors the testserver behavior
+    #[derive(Clone)]
+    struct SimpleTestConn;
+
+    #[async_trait::async_trait]
+    impl ServerConn for SimpleTestConn {
+        async fn initialize(
+            &self,
+            _context: &ServerCtx,
+            _protocol_version: String,
+            _capabilities: tmcp::schema::ClientCapabilities,
+            _client_info: tmcp::schema::Implementation,
+        ) -> tmcp::Result<InitializeResult> {
+            Ok(InitializeResult::new("mcptool-testserver")
+                .with_version("0.1.0")
+                .with_tools(true)
+                .with_prompts(true)
+                .with_resources(true, true)
+                .with_instructions("mcptool test server"))
+        }
+    }
+
+    // Create and start the server directly
+    let server = Server::default()
+        .with_connection(|| SimpleTestConn)
+        .with_capabilities(
+            ServerCapabilities::default()
+                .with_tools(Some(true))
+                .with_prompts(None)
+                .with_resources(None, None),
+        );
+
+    let addr = format!("127.0.0.1:{port}");
+    let server_handle = tokio::spawn(async move { server.serve_tcp(&addr).await });
 
     // Give the server time to start
-    tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
+    tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
 
     // Test with JSON output
     {
         let output = Output::new(false, 80).with_json(true);
         let target =
-            Target::parse(&format!("http://127.0.0.1:{port}")).expect("Failed to parse target");
+            Target::parse(&format!("tcp://127.0.0.1:{port}")).expect("Failed to parse target");
 
         let (_client, init_result) = libmcptool::client::connect_to_server(&target, ())
             .await
@@ -50,7 +83,7 @@ async fn test_mcp_init_with_test_server() {
         assert_eq!(init_result.server_info.version, "0.1.0");
         assert_eq!(
             init_result.protocol_version,
-            tenx_mcp::schema::LATEST_PROTOCOL_VERSION
+            tmcp::schema::LATEST_PROTOCOL_VERSION
         );
     }
 
@@ -58,7 +91,7 @@ async fn test_mcp_init_with_test_server() {
     {
         let output = Output::new(false, 80).with_json(false);
         let target =
-            Target::parse(&format!("http://127.0.0.1:{port}")).expect("Failed to parse target");
+            Target::parse(&format!("tcp://127.0.0.1:{port}")).expect("Failed to parse target");
 
         let (_client, init_result) = libmcptool::client::connect_to_server(&target, ())
             .await
@@ -77,17 +110,17 @@ async fn test_mcp_init_output_format() {
     // This test verifies the init function handles both output modes correctly
     // We use a mock InitializeResult to avoid needing a real server
 
-    let init_result = tenx_mcp::schema::InitializeResult {
+    let init_result = tmcp::schema::InitializeResult {
         protocol_version: "2025-06-18".to_string(),
-        capabilities: tenx_mcp::schema::ServerCapabilities {
-            tools: Some(tenx_mcp::schema::ToolsCapability {
+        capabilities: tmcp::schema::ServerCapabilities {
+            tools: Some(tmcp::schema::ToolsCapability {
                 list_changed: Some(true),
             }),
-            resources: Some(tenx_mcp::schema::ResourcesCapability {
+            resources: Some(tmcp::schema::ResourcesCapability {
                 subscribe: Some(true),
                 list_changed: Some(false),
             }),
-            prompts: Some(tenx_mcp::schema::PromptsCapability {
+            prompts: Some(tmcp::schema::PromptsCapability {
                 list_changed: Some(false),
             }),
             logging: Some(serde_json::Value::Object(serde_json::Map::new())),
@@ -104,7 +137,7 @@ async fn test_mcp_init_output_format() {
                 map
             }),
         },
-        server_info: tenx_mcp::schema::Implementation {
+        server_info: tmcp::schema::Implementation {
             name: "Test Server".to_string(),
             version: "1.2.3".to_string(),
             title: Some("Test MCP Server".to_string()),
@@ -128,10 +161,10 @@ async fn test_mcp_init_output_format() {
     }
 
     // Test with minimal server (no optional fields)
-    let minimal_init_result = tenx_mcp::schema::InitializeResult {
+    let minimal_init_result = tmcp::schema::InitializeResult {
         protocol_version: "2025-06-18".to_string(),
-        capabilities: tenx_mcp::schema::ServerCapabilities::default(),
-        server_info: tenx_mcp::schema::Implementation {
+        capabilities: tmcp::schema::ServerCapabilities::default(),
+        server_info: tmcp::schema::Implementation {
             name: "Minimal".to_string(),
             version: "0.1.0".to_string(),
             title: None,

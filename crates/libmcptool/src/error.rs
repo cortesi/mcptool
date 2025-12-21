@@ -28,7 +28,7 @@ pub enum Error {
 
     /// MCP client errors.
     #[error("MCP client error: {0}")]
-    MpcClient(#[from] tenx_mcp::Error),
+    MpcClient(#[from] tmcp::Error),
 
     /// Format errors for invalid user input.
     #[error("Invalid format: {0}")]

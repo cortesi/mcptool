@@ -10,7 +10,7 @@ repository.workspace = true
 [dependencies]
 libmcptool = { path = "../libmcptool" }
 
-tenx-mcp = { path = "../../../tenx-mcp/crates/tenx-mcp" }
+tmcp = { path = "../../../tmcp/crates/tmcp" }
 
 clap = { version = "4.5.40", features = ["derive"] }
 shell-words = "1.1"
