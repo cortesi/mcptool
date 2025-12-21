@@ -1,5 +1,4 @@
-use crate::Result;
-use crate::output::Output;
+use crate::{Result, output::Output};
 
 fn toolschema(output: &Output, schema: &tmcp::schema::ToolSchema) -> Result<()> {
     if let Some(properties) = &schema.properties

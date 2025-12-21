@@ -1,6 +1,4 @@
-use std::fmt::Display;
-use std::future::Future;
-use std::time::Instant;
+use std::{fmt::Display, future::Future, time::Instant};
 
 use async_trait::async_trait;
 

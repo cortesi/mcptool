@@ -1,10 +1,9 @@
 use std::time::Duration;
 
 use libmcptool::{client, ctx::Ctx, target::Target};
-use tmcp::schema::{ClientNotification, ServerNotification};
 use tmcp::{
     ClientConn, ClientCtx, Result as McpResult, Server, ServerAPI, ServerConn, ServerCtx,
-    schema::{LoggingLevel, ServerCapabilities},
+    schema::{ClientNotification, LoggingLevel, ServerCapabilities, ServerNotification},
 };
 use tokio::{sync::mpsc, time::timeout};
 

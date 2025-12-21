@@ -1,7 +1,4 @@
-use std::collections::HashMap;
-use std::fs;
-use std::path::PathBuf;
-use std::time::SystemTime;
+use std::{collections::HashMap, fs, path::PathBuf, time::SystemTime};
 
 use serde::{Deserialize, Serialize};
 

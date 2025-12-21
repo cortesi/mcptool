@@ -44,7 +44,7 @@ impl Target {
             let port = port_str
                 .parse::<u16>()
                 .map_err(|_| Error::Format(format!("Invalid port: {port_str}")))?;
-            return Ok(Target::Tcp {
+            return Ok(Self::Tcp {
                 host: "0.0.0.0".to_string(),
                 port,
             });
@@ -64,7 +64,7 @@ impl Target {
                     let port = port_str
                         .parse::<u16>()
                         .map_err(|_| Error::Format(format!("Invalid port: {port_str}")))?;
-                    return Ok(Target::Tcp { host, port });
+                    return Ok(Self::Tcp { host, port });
                 } else {
                     return Err(Error::Format(
                         "Invalid character after IPv6 address".to_string(),
@@ -92,7 +92,7 @@ impl Target {
                 let port = port_str
                     .parse::<u16>()
                     .map_err(|_| Error::Format(format!("Invalid port: {port_str}")))?;
-                Ok(Target::Tcp { host, port })
+                Ok(Self::Tcp { host, port })
             }
         } else {
             Err(Error::Format(
@@ -117,20 +117,20 @@ impl Target {
         let command = parts[0].clone();
         let args = parts[1..].to_vec();
 
-        Ok(Target::Stdio { command, args })
+        Ok(Self::Stdio { command, args })
     }
 
     fn parse_http(input: &str) -> Result<Self> {
-        Self::parse_http_common(input, 80, |host, port| Target::Http { host, port })
+        Self::parse_http_common(input, 80, |host, port| Self::Http { host, port })
     }
 
     fn parse_https(input: &str) -> Result<Self> {
-        Self::parse_http_common(input, 443, |host, port| Target::Https { host, port })
+        Self::parse_http_common(input, 443, |host, port| Self::Https { host, port })
     }
 
     fn parse_http_common<F>(input: &str, default_port: u16, constructor: F) -> Result<Self>
     where
-        F: Fn(String, u16) -> Target,
+        F: Fn(String, u16) -> Self,
     {
         if input.is_empty() {
             return Err(Error::Format("Empty host specification".to_string()));
@@ -190,7 +190,7 @@ impl Target {
         // Validate the auth name using the shared validation function
         crate::auth::validate_auth_name(input)?;
 
-        Ok(Target::Auth {
+        Ok(Self::Auth {
             name: input.to_string(),
         })
     }
@@ -199,7 +199,7 @@ impl Target {
 impl fmt::Display for Target {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Target::Tcp { host, port } => {
+            Self::Tcp { host, port } => {
                 // Check if host is an IPv6 address (contains colons but not already bracketed)
                 if host.contains(':') && !host.starts_with('[') {
                     write!(f, "tcp://[{host}]:{port}")
@@ -207,14 +207,14 @@ impl fmt::Display for Target {
                     write!(f, "tcp://{host}:{port}")
                 }
             }
-            Target::Stdio { command, args } => {
+            Self::Stdio { command, args } => {
                 if args.is_empty() {
                     write!(f, "cmd://{command}")
                 } else {
                     write!(f, "cmd://{} {}", command, shell_words::join(args))
                 }
             }
-            Target::Http { host, port } => {
+            Self::Http { host, port } => {
                 // Check if host is an IPv6 address
                 if host.contains(':') && !host.starts_with('[') {
                     if *port == 80 {
@@ -228,7 +228,7 @@ impl fmt::Display for Target {
                     write!(f, "http://{host}:{port}")
                 }
             }
-            Target::Https { host, port } => {
+            Self::Https { host, port } => {
                 // Check if host is an IPv6 address
                 if host.contains(':') && !host.starts_with('[') {
                     if *port == 443 {
@@ -242,7 +242,7 @@ impl fmt::Display for Target {
                     write!(f, "https://{host}:{port}")
                 }
             }
-            Target::Auth { name } => {
+            Self::Auth { name } => {
                 write!(f, "auth://{name}")
             }
         }

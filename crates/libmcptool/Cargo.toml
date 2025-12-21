@@ -12,7 +12,7 @@ keywords.workspace = true
 tmcp = { path = "../../../tmcp/crates/tmcp" }
 
 shell-words = "1.1"
-rustyline = "16.0"
+rustyline = "17"
 tokio = { version = "1", features = ["full"] }
 serde_json = "1.0.140"
 async-trait = "0.1"
@@ -41,3 +41,6 @@ vergen-gix = { version = "1.0.9", features = ["build"] }
 
 [dev-dependencies]
 tempfile = "3.8"
+
+[lints]
+workspace = true

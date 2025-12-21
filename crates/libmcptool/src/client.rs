@@ -1,14 +1,29 @@
-use std::sync::Arc;
+//! MCP client connection management.
 
-use tmcp::auth::{OAuth2Client, OAuth2Config};
-use tmcp::{Client, ClientConn, schema::InitializeResult};
+use std::{
+    sync::Arc,
+    time::{Instant, SystemTime},
+};
 
-use crate::ctx::VERSION;
-use crate::{Error, Result, ctx::Ctx, target::Target, utils::TimedFuture};
+use tmcp::{
+    Client, ClientConn,
+    auth::{OAuth2Client, OAuth2Config, OAuth2Token},
+    schema::InitializeResult,
+};
 
+use crate::{
+    Error, Result,
+    ctx::{Ctx, VERSION},
+    target::Target,
+    utils::TimedFuture,
+};
+
+/// Creates an MCP client connected to the specified target.
 pub async fn get_client(ctx: &Ctx, target: &Target) -> Result<(Client<()>, InitializeResult)> {
     get_client_with_connection(ctx, target, ()).await
 }
+
+/// Creates an MCP client with a custom connection handler.
 pub async fn get_client_with_connection<C: ClientConn + Send + 'static>(
     ctx: &Ctx,
     target: &Target,
@@ -35,6 +50,7 @@ pub async fn get_client_with_connection<C: ClientConn + Send + 'static>(
     }
 }
 
+/// Connects to a target using OAuth authentication.
 async fn connect_with_auth<C: ClientConn + Send + 'static>(
     ctx: &Ctx,
     target: &Target,
@@ -54,7 +70,7 @@ async fn connect_with_auth<C: ClientConn + Send + 'static>(
     let storage = ctx.storage()?;
     let auth = storage.get_auth(auth_name)?;
     if let Some(expires_at) = auth.expires_at
-        && expires_at <= std::time::SystemTime::now()
+        && expires_at <= SystemTime::now()
     {
         return Err(Error::Other(
             "Access token has expired. Please re-authenticate with 'mcptool auth add/renew'"
@@ -80,14 +96,14 @@ async fn connect_with_auth<C: ClientConn + Send + 'static>(
 
     // Set the stored tokens if available
     if let Some(access_token) = auth.access_token {
-        let token = tmcp::auth::OAuth2Token {
+        let token = OAuth2Token {
             access_token,
             refresh_token: auth.refresh_token,
             expires_at: auth.expires_at.map(|system_time| {
                 // Convert SystemTime to Instant
-                match system_time.duration_since(std::time::SystemTime::now()) {
-                    Ok(duration) => std::time::Instant::now() + duration,
-                    Err(_) => std::time::Instant::now(), // Token is already expired
+                match system_time.duration_since(SystemTime::now()) {
+                    Ok(duration) => Instant::now() + duration,
+                    Err(_) => Instant::now(), // Token is already expired
                 }
             }),
         };
@@ -96,7 +112,7 @@ async fn connect_with_auth<C: ClientConn + Send + 'static>(
 
     let oauth_client = Arc::new(oauth_client);
 
-    let mut client = Client::new_with_connection("mcptool", crate::ctx::VERSION, conn);
+    let mut client = Client::new_with_connection("mcptool", VERSION, conn);
 
     let init_result = match target {
         Target::Http { host, port } => {
@@ -127,6 +143,7 @@ async fn connect_with_auth<C: ClientConn + Send + 'static>(
     Ok((client, init_result))
 }
 
+/// Connects to an MCP server without authentication.
 pub async fn connect_to_server<C: ClientConn + Send + 'static>(
     target: &Target,
     conn: C,
@@ -141,7 +158,7 @@ pub async fn connect_to_server<C: ClientConn + Send + 'static>(
             })?
         }
         Target::Stdio { command, args } => {
-            let mut cmd = tokio::process::Command::new(command);
+            let mut cmd = tokio::process::Command::new(command.clone());
             cmd.args(args);
 
             let _child = client

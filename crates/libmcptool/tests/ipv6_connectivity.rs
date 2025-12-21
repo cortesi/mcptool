@@ -1,6 +1,5 @@
 use libmcptool::target::Target;
-use tokio::io::AsyncWriteExt;
-use tokio::net::TcpListener;
+use tokio::{io::AsyncWriteExt, net::TcpListener};
 
 #[tokio::test]
 async fn test_ipv6_parsing_and_display() {

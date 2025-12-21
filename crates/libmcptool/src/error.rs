@@ -1,4 +1,11 @@
+//! Error types for mcptool.
+
+use std::io;
+
+use rustyline::error::ReadlineError;
 use thiserror::Error;
+
+use crate::storage::StorageError;
 
 /// Type alias for Results using our Error type.
 pub type Result<T> = std::result::Result<T, Error>;
@@ -8,7 +15,7 @@ pub type Result<T> = std::result::Result<T, Error>;
 pub enum Error {
     /// I/O errors from file operations, network operations, etc.
     #[error("I/O error: {0}")]
-    Io(#[from] std::io::Error),
+    Io(#[from] io::Error),
 
     /// JSON serialization/deserialization errors.
     #[error("JSON error: {0}")]
@@ -16,7 +23,7 @@ pub enum Error {
 
     /// Storage-related errors.
     #[error("Storage error: {0}")]
-    Storage(#[from] crate::storage::StorageError),
+    Storage(#[from] StorageError),
 
     /// MCP protocol or connection errors.
     #[error("MCP error: {0}")]
@@ -24,7 +31,7 @@ pub enum Error {
 
     /// Readline errors from rustyline.
     #[error("Readline error: {0}")]
-    Readline(#[from] rustyline::error::ReadlineError),
+    Readline(#[from] ReadlineError),
 
     /// MCP client errors.
     #[error("MCP client error: {0}")]
@@ -41,6 +48,6 @@ pub enum Error {
 
 impl From<String> for Error {
     fn from(s: String) -> Self {
-        Error::Other(s)
+        Self::Other(s)
     }
 }

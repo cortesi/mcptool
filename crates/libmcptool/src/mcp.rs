@@ -1,23 +1,28 @@
+//! MCP client command implementations.
+
 use tmcp::{
     Client, ClientConn, ServerAPI,
-    schema::{InitializeResult, LoggingLevel},
+    schema::{
+        ArgumentInfo, InitializeResult, LoggingLevel, PromptReference, Reference, ResourceReference,
+    },
 };
 
-use crate::{Result, args::ArgumentParser, calltool, output, utils::TimedFuture};
+use crate::{
+    Error, Result, args::ArgumentParser, calltool, output, output::Output, utils::TimedFuture,
+};
 
-pub async fn ping<C: ClientConn + 'static>(
-    client: &mut Client<C>,
-    output: &crate::output::Output,
-) -> Result<()> {
+/// Pings the MCP server.
+pub async fn ping<C: ClientConn + 'static>(client: &mut Client<C>, output: &Output) -> Result<()> {
     output.text("Pinging")?;
     client.ping().timed("   response", output).await?;
     output.ping()?;
     Ok(())
 }
 
+/// Lists all available tools from the MCP server.
 pub async fn listtools<C: ClientConn + 'static>(
     client: &mut Client<C>,
-    output: &crate::output::Output,
+    output: &Output,
 ) -> Result<()> {
     output.text("Listing tools")?;
     let tools_result = client
@@ -28,14 +33,16 @@ pub async fn listtools<C: ClientConn + 'static>(
     Ok(())
 }
 
-pub fn init(init_result: &InitializeResult, output: &crate::output::Output) -> Result<()> {
+/// Displays the initialization result from the MCP server.
+pub fn init(init_result: &InitializeResult, output: &Output) -> Result<()> {
     output::initresult::init_result(output, init_result)?;
     Ok(())
 }
 
+/// Lists all available resources from the MCP server.
 pub async fn listresources<C: ClientConn + 'static>(
     client: &mut Client<C>,
-    output: &crate::output::Output,
+    output: &Output,
 ) -> Result<()> {
     output.text("Listing resources")?;
     let resources_result = client
@@ -46,9 +53,10 @@ pub async fn listresources<C: ClientConn + 'static>(
     Ok(())
 }
 
+/// Lists all available prompts from the MCP server.
 pub async fn listprompts<C: ClientConn + 'static>(
     client: &mut Client<C>,
-    output: &crate::output::Output,
+    output: &Output,
 ) -> Result<()> {
     output.text("Listing prompts")?;
     let prompts_result = client
@@ -59,9 +67,10 @@ pub async fn listprompts<C: ClientConn + 'static>(
     Ok(())
 }
 
+/// Lists all available resource templates from the MCP server.
 pub async fn listresourcetemplates<C: ClientConn + 'static>(
     client: &mut Client<C>,
-    output: &crate::output::Output,
+    output: &Output,
 ) -> Result<()> {
     output.text("Listing resource templates")?;
     let templates_result = client
@@ -72,9 +81,10 @@ pub async fn listresourcetemplates<C: ClientConn + 'static>(
     Ok(())
 }
 
+/// Sets the logging level on the MCP server.
 pub async fn set_level<C: ClientConn + 'static>(
     client: &mut Client<C>,
-    output: &crate::output::Output,
+    output: &Output,
     level: &str,
 ) -> Result<()> {
     output.text(format!("Setting logging level to: {level}"))?;
@@ -90,7 +100,7 @@ pub async fn set_level<C: ClientConn + 'static>(
         "alert" => LoggingLevel::Alert,
         "emergency" => LoggingLevel::Emergency,
         _ => {
-            return Err(crate::Error::Other(format!(
+            return Err(Error::Other(format!(
                 "Invalid logging level: {}. Valid levels are: debug, info, notice, warning, error, critical, alert, emergency",
                 level
             )));
@@ -107,9 +117,10 @@ pub async fn set_level<C: ClientConn + 'static>(
     Ok(())
 }
 
+/// Calls a tool on the MCP server.
 pub async fn calltool<C: ClientConn + 'static>(
     client: &mut Client<C>,
-    output: &crate::output::Output,
+    output: &Output,
     tool_name: &str,
     args: Vec<String>,
     interactive: bool,
@@ -121,12 +132,12 @@ pub async fn calltool<C: ClientConn + 'static>(
         .filter(|&&x| x)
         .count();
     if mode_count == 0 {
-        return Err(crate::Error::Other(
+        return Err(Error::Other(
             "Must specify one of: --interactive, --json, or --arg key=value arguments".to_string(),
         ));
     }
     if mode_count > 1 {
-        return Err(crate::Error::Other(
+        return Err(Error::Other(
             "Cannot combine --interactive, --json, and --arg modes".to_string(),
         ));
     }
@@ -143,7 +154,7 @@ pub async fn calltool<C: ClientConn + 'static>(
         .tools
         .iter()
         .find(|t| t.name == tool_name)
-        .ok_or_else(|| crate::Error::Other(format!("Tool '{tool_name}' not found")))?;
+        .ok_or_else(|| Error::Other(format!("Tool '{tool_name}' not found")))?;
 
     // Parse arguments based on mode
     let arguments = if json {
@@ -163,9 +174,10 @@ pub async fn calltool<C: ClientConn + 'static>(
     output::calltool::call_tool_result(output, &result)
 }
 
+/// Reads a resource from the MCP server.
 pub async fn read_resource<C: ClientConn + 'static>(
     client: &mut Client<C>,
-    output: &crate::output::Output,
+    output: &Output,
     uri: &str,
 ) -> Result<()> {
     output.text(format!("Reading resource: {uri}"))?;
@@ -177,9 +189,10 @@ pub async fn read_resource<C: ClientConn + 'static>(
     Ok(())
 }
 
+/// Gets a prompt from the MCP server.
 pub async fn get_prompt<C: ClientConn + 'static>(
     client: &mut Client<C>,
-    output: &crate::output::Output,
+    output: &Output,
     name: &str,
     args: Vec<String>,
 ) -> Result<()> {
@@ -196,9 +209,10 @@ pub async fn get_prompt<C: ClientConn + 'static>(
     Ok(())
 }
 
+/// Subscribes to resource updates from the MCP server.
 pub async fn subscribe_resource<C: ClientConn + 'static>(
     client: &mut Client<C>,
-    output: &crate::output::Output,
+    output: &Output,
     uri: &str,
 ) -> Result<()> {
     output.text(format!("Subscribing to resource: {uri}"))?;
@@ -210,9 +224,10 @@ pub async fn subscribe_resource<C: ClientConn + 'static>(
     Ok(())
 }
 
+/// Unsubscribes from resource updates.
 pub async fn unsubscribe_resource<C: ClientConn + 'static>(
     client: &mut Client<C>,
-    output: &crate::output::Output,
+    output: &Output,
     uri: &str,
 ) -> Result<()> {
     output.text(format!("Unsubscribing from resource: {uri}"))?;
@@ -224,9 +239,10 @@ pub async fn unsubscribe_resource<C: ClientConn + 'static>(
     Ok(())
 }
 
+/// Gets completions for an argument.
 pub async fn complete<C: ClientConn + 'static>(
     client: &mut Client<C>,
-    output: &crate::output::Output,
+    output: &Output,
     reference: &str,
     argument: &str,
 ) -> Result<()> {
@@ -234,11 +250,11 @@ pub async fn complete<C: ClientConn + 'static>(
 
     // Parse the reference into Reference
     let completion_ref = if reference.starts_with("resource://") {
-        tmcp::schema::Reference::Resource(tmcp::schema::ResourceReference {
+        Reference::Resource(ResourceReference {
             uri: reference.to_string(),
         })
     } else if reference.starts_with("prompt://") {
-        tmcp::schema::Reference::Prompt(tmcp::schema::PromptReference {
+        Reference::Prompt(PromptReference {
             name: reference
                 .strip_prefix("prompt://")
                 .unwrap_or(reference)
@@ -246,13 +262,13 @@ pub async fn complete<C: ClientConn + 'static>(
             title: None,
         })
     } else {
-        return Err(crate::Error::Other(format!(
+        return Err(Error::Other(format!(
             "Invalid reference format: '{}'. Expected resource:// or prompt:// prefix",
             reference
         )));
     };
 
-    let argument_info = tmcp::schema::ArgumentInfo {
+    let argument_info = ArgumentInfo {
         name: argument.to_string(),
         value: "".to_string(),
     };

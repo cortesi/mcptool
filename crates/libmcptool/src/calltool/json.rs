@@ -1,19 +1,23 @@
-use std::collections::HashMap;
-use std::io::{self, BufRead};
+use std::{
+    collections::HashMap,
+    io::{self, BufRead},
+};
 
 use tmcp::Arguments;
 
-use crate::Result;
+use crate::{Result, output::Output};
 
-pub fn parse_json_arguments(output: &crate::output::Output) -> Result<Option<Arguments>> {
+/// Parses JSON arguments from stdin.
+pub fn parse_json_arguments(output: &Output) -> Result<Option<Arguments>> {
     parse_json_arguments_from_reader(io::stdin().lock(), output)
 }
 
+/// Internal implementation that accepts a reader for testing.
 fn parse_json_arguments_from_reader<R: BufRead>(
     reader: R,
-    output: &crate::output::Output,
+    output: &Output,
 ) -> Result<Option<Arguments>> {
-    let _ = output.text("Reading JSON arguments from stdin...");
+    output.text("Reading JSON arguments from stdin...")?;
 
     let mut buffer = String::new();
     let mut consecutive_new_lines_count = 0u8;
@@ -26,7 +30,7 @@ fn parse_json_arguments_from_reader<R: BufRead>(
         if let Ok(json_value) = serde_json::from_str::<serde_json::Value>(&buffer) {
             return match json_value {
                 serde_json::Value::Object(map) => {
-                    let _ = output.trace_info(format!("Parsed JSON arguments: {:?}", map));
+                    output.trace_info(format!("Parsed JSON arguments: {:?}", map))?;
                     let map: HashMap<String, serde_json::Value> = map.into_iter().collect();
                     Ok(Some(Arguments::from(map)))
                 }

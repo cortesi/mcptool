@@ -14,7 +14,7 @@ tmcp = { path = "../../../tmcp/crates/tmcp" }
 
 clap = { version = "4.5.40", features = ["derive"] }
 shell-words = "1.1"
-rustyline = "16.0"
+rustyline = "17"
 tokio = { version = "1", features = ["full"] }
 serde_json = "1.0.140"
 async-trait = "0.1"
@@ -36,3 +36,6 @@ atty = "0.2"
 [build-dependencies]
 anyhow = "1.0.98"
 vergen-gix = { version = "1.0.9", features = ["build"] }
+
+[lints]
+workspace = true

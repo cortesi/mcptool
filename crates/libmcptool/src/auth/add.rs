@@ -1,10 +1,15 @@
-use std::time::{Duration, SystemTime};
+use std::{
+    net::TcpListener,
+    time::{Duration, Instant, SystemTime},
+};
 
 use rustyline::DefaultEditor;
-use tmcp::auth::{OAuth2CallbackServer, OAuth2Client, OAuth2Config};
+use tmcp::auth::{OAuth2CallbackServer, OAuth2Client, OAuth2Config, OAuth2Token};
 use tokio::time::timeout;
 
-use crate::{Error, Result, auth::validate_auth_name, ctx::Ctx, storage::StoredAuth};
+use crate::{
+    Error, Result, auth::validate_auth_name, ctx::Ctx, output::Output, storage::StoredAuth,
+};
 
 pub struct AddCommandArgs {
     pub name: String,
@@ -88,11 +93,10 @@ pub async fn add_command(ctx: &Ctx, args: AddCommandArgs) -> Result<()> {
             // Use local callback server with common port first
             let callback_port = 8080;
             // Try to bind to port 8080 first (commonly registered), fallback to dynamic
-            let actual_port =
-                match std::net::TcpListener::bind(format!("127.0.0.1:{callback_port}")) {
-                    Ok(_) => callback_port,
-                    Err(_) => find_available_port()?,
-                };
+            let actual_port = match TcpListener::bind(format!("127.0.0.1:{callback_port}")) {
+                Ok(_) => callback_port,
+                Err(_) => find_available_port()?,
+            };
             let url = format!("http://127.0.0.1:{actual_port}/callback");
             ctx.output.text(format!("Using redirect URL: {url}"))?;
             ctx.output.trace_warn(
@@ -280,7 +284,7 @@ pub async fn add_command(ctx: &Ctx, args: AddCommandArgs) -> Result<()> {
 
     // Convert token expiration from Instant to SystemTime
     let expires_at = token.expires_at.map(|instant| {
-        let duration_since_now = instant.duration_since(std::time::Instant::now());
+        let duration_since_now = instant.duration_since(Instant::now());
         SystemTime::now() + duration_since_now
     });
 
@@ -311,11 +315,12 @@ pub async fn add_command(ctx: &Ctx, args: AddCommandArgs) -> Result<()> {
     Ok(())
 }
 
+/// Waits for the OAuth callback to be received via local server.
 async fn wait_for_callback(
     oauth_client: &mut OAuth2Client,
     callback_server: OAuth2CallbackServer,
     expected_state: String,
-) -> Result<tmcp::auth::OAuth2Token> {
+) -> Result<OAuth2Token> {
     // Wait for the OAuth callback
     let (code, state) = callback_server.wait_for_callback().await?;
 
@@ -332,11 +337,12 @@ async fn wait_for_callback(
     Ok(token)
 }
 
+/// Waits for the OAuth callback URL to be manually entered by the user.
 async fn wait_for_manual_callback(
     oauth_client: &mut OAuth2Client,
     expected_state: String,
-    output: &crate::output::Output,
-) -> Result<tmcp::auth::OAuth2Token> {
+    output: &Output,
+) -> Result<OAuth2Token> {
     let mut rl = DefaultEditor::new()?;
 
     output.text("")?;
@@ -393,9 +399,8 @@ async fn wait_for_manual_callback(
     Ok(token)
 }
 
+/// Finds an available port on localhost.
 fn find_available_port() -> Result<u16> {
-    use std::net::TcpListener;
-
     let listener = TcpListener::bind("127.0.0.1:0")?;
     let addr = listener.local_addr()?;
     Ok(addr.port())

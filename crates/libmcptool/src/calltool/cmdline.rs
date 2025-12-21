@@ -2,11 +2,12 @@ use std::collections::HashMap;
 
 use tmcp::Arguments;
 
-use crate::Result;
+use crate::{Result, output::Output};
 
+/// Parses command line arguments in the form `key=value`.
 pub fn parse_command_line_arguments(
     args: Vec<String>,
-    output: &crate::output::Output,
+    output: &Output,
 ) -> Result<Option<Arguments>> {
     if args.is_empty() {
         return Ok(None);
@@ -44,7 +45,7 @@ pub fn parse_command_line_arguments(
         arg_map.insert(key, json_value);
     }
 
-    let _ = output.trace_info(format!("Parsed arguments: {:?}", arg_map));
+    output.trace_info(format!("Parsed arguments: {:?}", arg_map))?;
     Ok(Some(Arguments::from(arg_map)))
 }
 

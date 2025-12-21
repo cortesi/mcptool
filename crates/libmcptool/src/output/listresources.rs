@@ -1,5 +1,4 @@
-use crate::Result;
-use crate::output::Output;
+use crate::{Result, output::Output};
 
 /// Display the list of resources in either JSON or formatted text
 pub fn list_resources_result(

@@ -1,6 +1,10 @@
-use std::collections::HashMap;
-use std::sync::atomic::{AtomicU64, Ordering};
-use std::sync::{Arc, Mutex};
+use std::{
+    collections::HashMap,
+    sync::{
+        Arc, Mutex,
+        atomic::{AtomicU64, Ordering},
+    },
+};
 
 use rustyline::DefaultEditor;
 use serde::{Deserialize, Serialize};
@@ -97,25 +101,6 @@ impl TestServerState {
         let _ = self
             .output
             .trace_success(format!("client connected from {}", remote_addr));
-    }
-
-    fn remove_client(&self, remote_addr: &str) {
-        let mut clients = self.connected_clients.lock().unwrap();
-        let mut contexts = self.active_contexts.lock().unwrap();
-
-        // Find and remove client by remote address
-        let client_id_to_remove = clients
-            .iter()
-            .find(|(_, info)| info.remote_addr == remote_addr)
-            .map(|(id, _)| id.clone());
-
-        if let Some(client_id) = client_id_to_remove {
-            clients.remove(&client_id);
-            contexts.remove(&client_id);
-            let _ = self
-                .output
-                .trace_warn(format!("client disconnected from {}", remote_addr));
-        }
     }
 
     async fn broadcast_notification(&self, notification: ServerNotification) -> Result<()> {
@@ -1094,26 +1079,6 @@ async fn handle_tcp_non_interactive(
     let _ = output.trace_success(format!("Listening on: tcp://{}", addr));
     let _ = output.text("Press Ctrl+C to stop the server");
     server.serve_tcp(addr).await
-}
-
-/// Handle non-interactive mode for HTTP server
-async fn handle_http_non_interactive(
-    server: Server<impl Fn() -> Box<dyn ServerConn> + Clone + Send + Sync + 'static>,
-    addr: &str,
-    output: &Output,
-) -> Result<()> {
-    let _ = output.text("Transport: HTTP");
-    let _ = output.trace_success(format!("Listening on: http://{}", addr));
-    let _ = output.text("Press Ctrl+C to stop the server");
-
-    let handle = server.serve_http(addr).await?;
-
-    // Wait for Ctrl+C
-    tokio::signal::ctrl_c().await.unwrap();
-    let _ = output.trace_warn("Shutting down server...");
-    handle.stop().await?;
-
-    Ok(())
 }
 
 pub async fn run_test_server(

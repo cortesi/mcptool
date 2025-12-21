@@ -1,29 +1,46 @@
-#![allow(dead_code)]
+//! Output formatting and display utilities.
 
+/// Call tool result display.
 pub mod calltool;
+/// Completion result display.
 pub mod complete;
+/// General output formatting.
 pub mod formatter;
+/// Prompt result display.
 pub mod getprompt;
+/// Initialization result display.
 pub mod initresult;
+/// Prompt list display.
 pub mod listprompts;
+/// Resource list display.
 pub mod listresources;
+/// Resource template list display.
 pub mod listresourcetemplates;
+/// Tool list display.
 pub mod listtools;
+/// Resource read result display.
 pub mod readresource;
 
-use std::io::{self, Write};
-use std::sync::{Arc, Mutex};
+use std::{
+    io::{self, Write},
+    sync::{Arc, Mutex},
+};
 
-use syntect::easy::HighlightLines;
-use syntect::highlighting::{Style, ThemeSet};
-use syntect::parsing::SyntaxSet;
-use syntect::util::{LinesWithEndings, as_24_bit_terminal_escaped};
+use syntect::{
+    easy::HighlightLines,
+    highlighting::{Style, ThemeSet},
+    parsing::SyntaxSet,
+    util::{LinesWithEndings, as_24_bit_terminal_escaped},
+};
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 use textwrap::{Options, wrap};
 use tracing::{Event, Level, Subscriber};
-use tracing_subscriber::layer::{Context, Layer};
-use tracing_subscriber::registry::LookupSpan;
-use tracing_subscriber::{EnvFilter, layer::SubscriberExt, util::SubscriberInitExt};
+use tracing_subscriber::{
+    EnvFilter,
+    layer::{Context, Layer, SubscriberExt},
+    registry::LookupSpan,
+    util::SubscriberInitExt,
+};
 
 use crate::Result;
 
@@ -41,22 +58,22 @@ impl LogLevel {
     /// Convert to tracing Level
     pub fn to_tracing_level(&self) -> Level {
         match self {
-            LogLevel::Error => Level::ERROR,
-            LogLevel::Warn => Level::WARN,
-            LogLevel::Info => Level::INFO,
-            LogLevel::Debug => Level::DEBUG,
-            LogLevel::Trace => Level::TRACE,
+            Self::Error => Level::ERROR,
+            Self::Warn => Level::WARN,
+            Self::Info => Level::INFO,
+            Self::Debug => Level::DEBUG,
+            Self::Trace => Level::TRACE,
         }
     }
 
     /// Get the level as a string for env filter
     pub fn as_str(&self) -> &'static str {
         match self {
-            LogLevel::Error => "error",
-            LogLevel::Warn => "warn",
-            LogLevel::Info => "info",
-            LogLevel::Debug => "debug",
-            LogLevel::Trace => "trace",
+            Self::Error => "error",
+            Self::Warn => "warn",
+            Self::Info => "info",
+            Self::Debug => "debug",
+            Self::Trace => "trace",
         }
     }
 }
@@ -66,11 +83,11 @@ impl std::str::FromStr for LogLevel {
 
     fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
-            "error" => Ok(LogLevel::Error),
-            "warn" => Ok(LogLevel::Warn),
-            "info" => Ok(LogLevel::Info),
-            "debug" => Ok(LogLevel::Debug),
-            "trace" => Ok(LogLevel::Trace),
+            "error" => Ok(Self::Error),
+            "warn" => Ok(Self::Warn),
+            "info" => Ok(Self::Info),
+            "debug" => Ok(Self::Debug),
+            "trace" => Ok(Self::Trace),
             _ => Err(format!("Invalid log level: {s}")),
         }
     }

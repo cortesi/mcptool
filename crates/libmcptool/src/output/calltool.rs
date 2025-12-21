@@ -1,8 +1,11 @@
-use crate::Result;
-use crate::output::Output;
+//! Call tool result display formatting.
 
-/// Display the result of calling a tool in either JSON or formatted text
-pub fn call_tool_result(output: &Output, result: &tmcp::schema::CallToolResult) -> Result<()> {
+use tmcp::schema::{Annotations, CallToolResult, Content, ResourceContents, Role};
+
+use crate::{Result, output::Output};
+
+/// Display the result of calling a tool in either JSON or formatted text.
+pub fn call_tool_result(output: &Output, result: &CallToolResult) -> Result<()> {
     if output.json {
         output.json_value(result)?;
     } else {
@@ -53,9 +56,10 @@ pub fn call_tool_result(output: &Output, result: &tmcp::schema::CallToolResult) 
     Ok(())
 }
 
-fn display_content(output: &Output, content: &tmcp::schema::Content) -> Result<()> {
+/// Displays a single content item.
+fn display_content(output: &Output, content: &Content) -> Result<()> {
     match content {
-        tmcp::schema::Content::Text(text_content) => {
+        Content::Text(text_content) => {
             output.kv("Type", "Text")?;
             let out = output.indent();
 
@@ -69,7 +73,7 @@ fn display_content(output: &Output, content: &tmcp::schema::Content) -> Result<(
                 display_annotations(&out, annotations)?;
             }
         }
-        tmcp::schema::Content::Image(image_content) => {
+        Content::Image(image_content) => {
             output.kv("Type", "Image")?;
             let out = output.indent();
             out.kv("MIME Type", &image_content.mime_type)?;
@@ -80,7 +84,7 @@ fn display_content(output: &Output, content: &tmcp::schema::Content) -> Result<(
                 display_annotations(&out, annotations)?;
             }
         }
-        tmcp::schema::Content::Audio(audio_content) => {
+        Content::Audio(audio_content) => {
             output.kv("Type", "Audio")?;
             let out = output.indent();
             out.kv("MIME Type", &audio_content.mime_type)?;
@@ -91,7 +95,7 @@ fn display_content(output: &Output, content: &tmcp::schema::Content) -> Result<(
                 display_annotations(&out, annotations)?;
             }
         }
-        tmcp::schema::Content::Resource(resource) => {
+        Content::Resource(resource) => {
             output.kv("Type", "Embedded Resource")?;
             let out = output.indent();
             display_resource_contents(&out, &resource.resource)?;
@@ -101,7 +105,7 @@ fn display_content(output: &Output, content: &tmcp::schema::Content) -> Result<(
                 display_annotations(&out, annotations)?;
             }
         }
-        tmcp::schema::Content::ResourceLink(resource_link) => {
+        Content::ResourceLink(resource_link) => {
             output.kv("Type", "Resource Link")?;
             let out = output.indent();
             out.kv("Name", &resource_link.name)?;
@@ -132,12 +136,10 @@ fn display_content(output: &Output, content: &tmcp::schema::Content) -> Result<(
     Ok(())
 }
 
-fn display_resource_contents(
-    output: &Output,
-    contents: &tmcp::schema::ResourceContents,
-) -> Result<()> {
+/// Displays resource contents.
+fn display_resource_contents(output: &Output, contents: &ResourceContents) -> Result<()> {
     match contents {
-        tmcp::schema::ResourceContents::Text(text_contents) => {
+        ResourceContents::Text(text_contents) => {
             output.kv("Resource Type", "Text")?;
             output.kv("URI", &text_contents.uri)?;
 
@@ -153,7 +155,7 @@ fn display_resource_contents(
                 out.text(line)?;
             }
         }
-        tmcp::schema::ResourceContents::Blob(blob_contents) => {
+        ResourceContents::Blob(blob_contents) => {
             output.kv("Resource Type", "Blob")?;
             output.kv("URI", &blob_contents.uri)?;
 
@@ -167,7 +169,8 @@ fn display_resource_contents(
     Ok(())
 }
 
-fn display_annotations(output: &Output, annotations: &tmcp::schema::Annotations) -> Result<()> {
+/// Displays content annotations.
+fn display_annotations(output: &Output, annotations: &Annotations) -> Result<()> {
     output.h3("Annotations")?;
     let out = output.indent();
 
@@ -175,8 +178,8 @@ fn display_annotations(output: &Output, annotations: &tmcp::schema::Annotations)
         let audience_str = audience
             .iter()
             .map(|role| match role {
-                tmcp::schema::Role::User => "User",
-                tmcp::schema::Role::Assistant => "Assistant",
+                Role::User => "User",
+                Role::Assistant => "Assistant",
             })
             .collect::<Vec<_>>()
             .join(", ");

@@ -1,6 +1,12 @@
+//! OAuth authentication management commands.
+
+/// OAuth credential addition functionality.
 mod add;
+/// OAuth credential listing functionality.
 mod list;
+/// OAuth credential removal functionality.
 mod remove;
+/// OAuth token renewal functionality.
 mod renew;
 
 pub use add::{AddCommandArgs, add_command};

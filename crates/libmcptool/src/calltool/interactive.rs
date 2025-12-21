@@ -1,31 +1,32 @@
-use std::collections::HashMap;
-use std::io::{self, BufRead, Write};
+use std::{
+    collections::HashMap,
+    io::{self, BufRead, Write},
+};
 
-use tmcp::Arguments;
+use tmcp::{Arguments, schema::Tool};
 
-use crate::Result;
+use crate::{Result, output::Output};
 
-pub fn parse_interactive_arguments(
-    tool: &tmcp::schema::Tool,
-    output: &crate::output::Output,
-) -> Result<Option<Arguments>> {
+/// Parses tool arguments interactively by prompting the user.
+pub fn parse_interactive_arguments(tool: &Tool, output: &Output) -> Result<Option<Arguments>> {
     parse_interactive_arguments_with_io(tool, output, &mut io::stdin().lock(), &mut io::stdout())
 }
 
+/// Internal implementation that accepts custom readers/writers for testing.
 fn parse_interactive_arguments_with_io<R: BufRead, W: Write>(
-    tool: &tmcp::schema::Tool,
-    output: &crate::output::Output,
+    tool: &Tool,
+    output: &Output,
     reader: &mut R,
     writer: &mut W,
 ) -> Result<Option<Arguments>> {
-    let _ = output.text("Interactive mode: Enter tool parameters");
+    output.text("Interactive mode: Enter tool parameters")?;
 
     let properties = tool.input_schema.properties.as_ref();
     let empty_vec = vec![];
     let required = tool.input_schema.required.as_ref().unwrap_or(&empty_vec);
 
     if properties.is_none() {
-        let _ = output.text("No parameters required for this tool");
+        output.text("No parameters required for this tool")?;
         return Ok(None);
     }
 
@@ -131,7 +132,7 @@ fn parse_interactive_arguments_with_io<R: BufRead, W: Write>(
     if arg_map.is_empty() {
         Ok(None)
     } else {
-        let _ = output.trace_info(format!("Interactive arguments: {:?}", arg_map));
+        output.trace_info(format!("Interactive arguments: {:?}", arg_map))?;
         Ok(Some(Arguments::from(arg_map)))
     }
 }

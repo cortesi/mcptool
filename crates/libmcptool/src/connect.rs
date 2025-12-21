@@ -1,5 +1,7 @@
+//! Interactive REPL for MCP server connections.
+
 use clap::Parser;
-use rustyline::DefaultEditor;
+use rustyline::{DefaultEditor, error::ReadlineError};
 use tmcp::{ClientConn, ClientCtx, Result as McpResult, schema::ServerNotification};
 use tokio::sync::mpsc;
 
@@ -7,12 +9,14 @@ use crate::{
     Result, client,
     command::{ReplCommandWrapper, execute_mcp_command_with_client, generate_repl_help},
     ctx::Ctx,
-    output::initresult,
+    output::{Output, initresult},
     target::Target,
 };
 
+/// Client connection that forwards server notifications to a channel.
 #[derive(Clone)]
 struct NotificationClientConn {
+    /// Sender for server notifications.
     notification_sender: mpsc::UnboundedSender<ServerNotification>,
 }
 
@@ -23,7 +27,8 @@ impl ClientConn for NotificationClientConn {
         _context: &ClientCtx,
         notification: ServerNotification,
     ) -> McpResult<()> {
-        let _ = self.notification_sender.send(notification);
+        // Best-effort notification delivery - receiver may be gone during shutdown
+        let _send_result = self.notification_sender.send(notification);
         Ok(())
     }
 }
@@ -114,11 +119,11 @@ pub async fn connect_command(ctx: &Ctx, target: String) -> Result<()> {
                                 }
                             }
                         }
-                        Err(rustyline::error::ReadlineError::Interrupted) => {
+                        Err(ReadlineError::Interrupted) => {
                             ctx.output.text("CTRL-C")?;
                             break;
                         }
-                        Err(rustyline::error::ReadlineError::Eof) => {
+                        Err(ReadlineError::Eof) => {
                             ctx.output.text("CTRL-D")?;
                             break;
                         }
@@ -139,10 +144,8 @@ pub async fn connect_command(ctx: &Ctx, target: String) -> Result<()> {
     Ok(())
 }
 
-fn display_notification(
-    output: &crate::output::Output,
-    notification: &ServerNotification,
-) -> Result<()> {
+/// Displays a server notification to the user.
+fn display_notification(output: &Output, notification: &ServerNotification) -> Result<()> {
     match notification {
         ServerNotification::LoggingMessage {
             level,

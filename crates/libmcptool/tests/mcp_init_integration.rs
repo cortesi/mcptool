@@ -12,8 +12,10 @@ fn create_test_ctx() -> (Ctx, TempDir) {
 
 #[tokio::test]
 async fn test_mcp_init_with_test_server() {
-    use tmcp::schema::{InitializeResult, ServerCapabilities};
-    use tmcp::{Server, ServerConn, ServerCtx};
+    use tmcp::{
+        Server, ServerConn, ServerCtx,
+        schema::{InitializeResult, ServerCapabilities},
+    };
 
     // Start the test server on a random port
     let listener = tokio::net::TcpListener::bind("127.0.0.1:0")
