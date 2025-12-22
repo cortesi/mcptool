@@ -1,12 +1,12 @@
 use tmcp::schema::CompleteResult;
 
 use super::formatter::{OutputFormatter, format_output};
-use crate::Result;
+use crate::{Result, output::Output};
 
 pub struct CompleteFormatter;
 
 impl OutputFormatter<CompleteResult> for CompleteFormatter {
-    fn format_text(&self, output: &crate::output::Output, result: &CompleteResult) -> Result<()> {
+    fn format_text(&self, output: &Output, result: &CompleteResult) -> Result<()> {
         output.text(format!(
             "Completions ({} item(s)):",
             result.completion.values.len()
@@ -28,6 +28,6 @@ impl OutputFormatter<CompleteResult> for CompleteFormatter {
     }
 }
 
-pub fn complete_result(output: &crate::output::Output, result: &CompleteResult) -> Result<()> {
-    format_output(output, result, CompleteFormatter)
+pub fn complete_result(output: &Output, result: &CompleteResult) -> Result<()> {
+    format_output(output, result, &CompleteFormatter)
 }

@@ -1,3 +1,7 @@
+#![allow(missing_docs)]
+use std::error::Error;
+use std::path::PathBuf;
+
 use clap::{Args, Parser, Subcommand};
 use libmcptool::{
     LogLevel, auth,
@@ -7,6 +11,7 @@ use libmcptool::{
     testserver,
 };
 use terminal_size::{Width, terminal_size};
+use tmcp::schema::LATEST_PROTOCOL_VERSION;
 
 #[derive(Args)]
 struct TargetArgs {
@@ -21,7 +26,7 @@ struct ProxyArgs {
 
     /// File path to log all proxy traffic
     #[arg(long)]
-    log_file: std::path::PathBuf,
+    log_file: PathBuf,
 }
 
 #[derive(Subcommand)]
@@ -167,7 +172,7 @@ enum Commands {
 }
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() -> Result<(), Box<dyn Error>> {
     let cli = Cli::parse();
 
     // Calculate the configuration directory
@@ -200,14 +205,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             println!("mcptool version {}", ctx::VERSION);
             println!(
                 "MCP protocol version: {}",
-                tmcp::schema::LATEST_PROTOCOL_VERSION
+                LATEST_PROTOCOL_VERSION
             );
         }
 
         Commands::Mcp { mcp_command } => {
             execute_mcp_command(mcp_command.command, &mcp_command.target, &ctx)
                 .await
-                .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
+                .map_err(|e| Box::new(e) as Box<dyn Error>)?;
         }
 
         Commands::Connect { target } => {

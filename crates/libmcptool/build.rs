@@ -1,3 +1,4 @@
+#![allow(missing_docs)]
 use anyhow::Result;
 use vergen_gix::{BuildBuilder, Emitter, GixBuilder};
 

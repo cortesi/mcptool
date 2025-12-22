@@ -1,9 +1,12 @@
-use crate::{Result, output::Output};
+use tmcp::schema::ListResourcesResult;
+
+use crate::Result;
+use crate::output::Output;
 
 /// Display the list of resources in either JSON or formatted text
 pub fn list_resources_result(
     output: &Output,
-    resources_result: &tmcp::schema::ListResourcesResult,
+    resources_result: &ListResourcesResult,
 ) -> Result<()> {
     if output.json {
         // Output as JSON

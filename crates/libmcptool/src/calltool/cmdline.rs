@@ -73,7 +73,7 @@ mod tests {
             .unwrap()
             .unwrap();
 
-        let map = serde_json::from_value::<std::collections::HashMap<String, serde_json::Value>>(
+        let map = serde_json::from_value::<HashMap<String, serde_json::Value>>(
             serde_json::to_value(result).unwrap(),
         )
         .unwrap();
@@ -92,7 +92,7 @@ mod tests {
             .unwrap()
             .unwrap();
 
-        let map = serde_json::from_value::<std::collections::HashMap<String, serde_json::Value>>(
+        let map = serde_json::from_value::<HashMap<String, serde_json::Value>>(
             serde_json::to_value(result).unwrap(),
         )
         .unwrap();
@@ -109,7 +109,7 @@ mod tests {
             .unwrap()
             .unwrap();
 
-        let map = serde_json::from_value::<std::collections::HashMap<String, serde_json::Value>>(
+        let map = serde_json::from_value::<HashMap<String, serde_json::Value>>(
             serde_json::to_value(result).unwrap(),
         )
         .unwrap();
@@ -132,7 +132,7 @@ mod tests {
             .unwrap()
             .unwrap();
 
-        let map = serde_json::from_value::<std::collections::HashMap<String, serde_json::Value>>(
+        let map = serde_json::from_value::<HashMap<String, serde_json::Value>>(
             serde_json::to_value(result).unwrap(),
         )
         .unwrap();
@@ -160,7 +160,7 @@ mod tests {
             .unwrap()
             .unwrap();
 
-        let map = serde_json::from_value::<std::collections::HashMap<String, serde_json::Value>>(
+        let map = serde_json::from_value::<HashMap<String, serde_json::Value>>(
             serde_json::to_value(result).unwrap(),
         )
         .unwrap();
@@ -188,7 +188,7 @@ mod tests {
             .unwrap()
             .unwrap();
 
-        let map = serde_json::from_value::<std::collections::HashMap<String, serde_json::Value>>(
+        let map = serde_json::from_value::<HashMap<String, serde_json::Value>>(
             serde_json::to_value(result).unwrap(),
         )
         .unwrap();
@@ -207,7 +207,7 @@ mod tests {
             .unwrap()
             .unwrap();
 
-        let map = serde_json::from_value::<std::collections::HashMap<String, serde_json::Value>>(
+        let map = serde_json::from_value::<HashMap<String, serde_json::Value>>(
             serde_json::to_value(result).unwrap(),
         )
         .unwrap();
@@ -227,7 +227,7 @@ mod tests {
             .unwrap()
             .unwrap();
 
-        let map = serde_json::from_value::<std::collections::HashMap<String, serde_json::Value>>(
+        let map = serde_json::from_value::<HashMap<String, serde_json::Value>>(
             serde_json::to_value(result).unwrap(),
         )
         .unwrap();
@@ -280,7 +280,7 @@ mod tests {
             .unwrap()
             .unwrap();
 
-        let map = serde_json::from_value::<std::collections::HashMap<String, serde_json::Value>>(
+        let map = serde_json::from_value::<HashMap<String, serde_json::Value>>(
             serde_json::to_value(result).unwrap(),
         )
         .unwrap();

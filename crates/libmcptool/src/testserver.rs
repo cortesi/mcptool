@@ -4,6 +4,7 @@ use std::{
         Arc, Mutex,
         atomic::{AtomicU64, Ordering},
     },
+    time::{Instant, SystemTime, UNIX_EPOCH},
 };
 
 use rustyline::DefaultEditor;
@@ -11,9 +12,10 @@ use serde::{Deserialize, Serialize};
 use tmcp::{
     Error, Result, Server, ServerConn, ServerCtx,
     schema::{
-        ClientCapabilities, ClientNotification, Cursor, InitializeResult, ListPromptsResult,
-        ListResourcesResult, ListToolsResult, LoggingLevel, ProgressToken, Prompt, PromptArgument,
-        ReadResourceResult, Resource, ServerCapabilities, ServerNotification, Tool, ToolSchema,
+        ClientCapabilities, ClientNotification, Cursor, Implementation, InitializeResult,
+        ListPromptsResult, ListResourcesResult, ListToolsResult, LoggingLevel, ProgressToken,
+        Prompt, PromptArgument, ReadResourceResult, Resource, ServerCapabilities,
+        ServerNotification, Tool, ToolSchema,
     },
 };
 
@@ -43,7 +45,7 @@ struct ClientInfo {
     remote_addr: String,
     client_name: String,
     client_version: String,
-    connected_at: std::time::Instant,
+    connected_at: Instant,
 }
 
 /// Shared state for the test server that can be accessed by both connections and the REPL
@@ -71,13 +73,13 @@ impl TestServerState {
         &self,
         context: &ServerCtx,
         remote_addr: String,
-        client_info: tmcp::schema::Implementation,
+        client_info: Implementation,
     ) {
         let client_id = format!(
             "{}_{}",
             remote_addr,
-            std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
                 .unwrap()
                 .as_nanos()
         );
@@ -86,7 +88,7 @@ impl TestServerState {
             remote_addr: remote_addr.clone(),
             client_name: client_info.name,
             client_version: client_info.version,
-            connected_at: std::time::Instant::now(),
+            connected_at: Instant::now(),
         };
 
         self.connected_clients
@@ -202,7 +204,7 @@ impl ServerConn for TestServerConn {
         context: &ServerCtx,
         protocol_version: String,
         capabilities: ClientCapabilities,
-        client_info: tmcp::schema::Implementation,
+        client_info: Implementation,
     ) -> Result<InitializeResult> {
         self.state.request_counter.fetch_add(1, Ordering::Relaxed);
         let _ = self.state.output.h1("initialize");

@@ -154,7 +154,7 @@ mod tests {
         properties: serde_json::Map<String, serde_json::Value>,
         required: Option<Vec<String>>,
     ) -> Tool {
-        let properties_map: std::collections::HashMap<String, serde_json::Value> =
+        let properties_map: HashMap<String, serde_json::Value> =
             properties.into_iter().collect();
         Tool {
             name: "test_tool".to_string(),
@@ -203,7 +203,7 @@ mod tests {
         let result = parse_interactive_arguments_with_io(&tool, &output, &mut reader, &mut writer)
             .unwrap()
             .unwrap();
-        let map = serde_json::from_value::<std::collections::HashMap<String, serde_json::Value>>(
+        let map = serde_json::from_value::<HashMap<String, serde_json::Value>>(
             serde_json::to_value(result).unwrap(),
         )
         .unwrap();
@@ -259,7 +259,7 @@ mod tests {
                     .unwrap()
                     .unwrap();
             let map =
-                serde_json::from_value::<std::collections::HashMap<String, serde_json::Value>>(
+                serde_json::from_value::<HashMap<String, serde_json::Value>>(
                     serde_json::to_value(result).unwrap(),
                 )
                 .unwrap();
@@ -287,7 +287,7 @@ mod tests {
         let result = parse_interactive_arguments_with_io(&tool, &output, &mut reader, &mut writer)
             .unwrap()
             .unwrap();
-        let map = serde_json::from_value::<std::collections::HashMap<String, serde_json::Value>>(
+        let map = serde_json::from_value::<HashMap<String, serde_json::Value>>(
             serde_json::to_value(result).unwrap(),
         )
         .unwrap();
@@ -317,7 +317,7 @@ mod tests {
         let result = parse_interactive_arguments_with_io(&tool, &output, &mut reader, &mut writer)
             .unwrap()
             .unwrap();
-        let map = serde_json::from_value::<std::collections::HashMap<String, serde_json::Value>>(
+        let map = serde_json::from_value::<HashMap<String, serde_json::Value>>(
             serde_json::to_value(result).unwrap(),
         )
         .unwrap();
@@ -385,7 +385,7 @@ mod tests {
         let result = parse_interactive_arguments_with_io(&tool, &output, &mut reader, &mut writer)
             .unwrap()
             .unwrap();
-        let map = serde_json::from_value::<std::collections::HashMap<String, serde_json::Value>>(
+        let map = serde_json::from_value::<HashMap<String, serde_json::Value>>(
             serde_json::to_value(result).unwrap(),
         )
         .unwrap();
@@ -420,7 +420,7 @@ mod tests {
         let result = parse_interactive_arguments_with_io(&tool, &output, &mut reader, &mut writer)
             .unwrap()
             .unwrap();
-        let map = serde_json::from_value::<std::collections::HashMap<String, serde_json::Value>>(
+        let map = serde_json::from_value::<HashMap<String, serde_json::Value>>(
             serde_json::to_value(result).unwrap(),
         )
         .unwrap();
@@ -451,7 +451,7 @@ mod tests {
         let result = parse_interactive_arguments_with_io(&tool, &output, &mut reader, &mut writer)
             .unwrap()
             .unwrap();
-        let map = serde_json::from_value::<std::collections::HashMap<String, serde_json::Value>>(
+        let map = serde_json::from_value::<HashMap<String, serde_json::Value>>(
             serde_json::to_value(result).unwrap(),
         )
         .unwrap();
@@ -485,7 +485,7 @@ mod tests {
         let result = parse_interactive_arguments_with_io(&tool, &output, &mut reader, &mut writer)
             .unwrap()
             .unwrap();
-        let map = serde_json::from_value::<std::collections::HashMap<String, serde_json::Value>>(
+        let map = serde_json::from_value::<HashMap<String, serde_json::Value>>(
             serde_json::to_value(result).unwrap(),
         )
         .unwrap();
@@ -519,7 +519,7 @@ mod tests {
         let result = parse_interactive_arguments_with_io(&tool, &output, &mut reader, &mut writer)
             .unwrap()
             .unwrap();
-        let map = serde_json::from_value::<std::collections::HashMap<String, serde_json::Value>>(
+        let map = serde_json::from_value::<HashMap<String, serde_json::Value>>(
             serde_json::to_value(result).unwrap(),
         )
         .unwrap();
@@ -549,7 +549,7 @@ mod tests {
         let result = parse_interactive_arguments_with_io(&tool, &output, &mut reader, &mut writer)
             .unwrap()
             .unwrap();
-        let map = serde_json::from_value::<std::collections::HashMap<String, serde_json::Value>>(
+        let map = serde_json::from_value::<HashMap<String, serde_json::Value>>(
             serde_json::to_value(result).unwrap(),
         )
         .unwrap();

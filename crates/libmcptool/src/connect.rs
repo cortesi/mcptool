@@ -4,6 +4,7 @@ use clap::Parser;
 use rustyline::{DefaultEditor, error::ReadlineError};
 use tmcp::{ClientConn, ClientCtx, Result as McpResult, schema::ServerNotification};
 use tokio::sync::mpsc;
+use tokio::task;
 
 use crate::{
     Result, client,
@@ -49,7 +50,8 @@ pub async fn connect_command(ctx: &Ctx, target: String) -> Result<()> {
 
     ctx.output.trace_success(format!(
         "Connected to: {} v{}",
-        init_result.server_info.name, init_result.server_info.version
+        init_result.server_info.name,
+        init_result.server_info.version
     ))?;
     ctx.output
         .text("Type 'help' for available commands, 'quit' to exit\n")?;
@@ -65,7 +67,7 @@ pub async fn connect_command(ctx: &Ctx, target: String) -> Result<()> {
                 }
             }
             // Handle user input (in a non-blocking way)
-            readline_result = tokio::task::spawn_blocking(|| {
+            readline_result = task::spawn_blocking(|| {
                 let mut rl = DefaultEditor::new().expect("Failed to create readline editor");
                 rl.readline("mcp> ")
             }) => {
@@ -105,8 +107,7 @@ pub async fn connect_command(ctx: &Ctx, target: String) -> Result<()> {
                                             )
                                             .await
                                             {
-                                                Ok(_) => {}
-                                                Err(e) => {
+                                                Ok(_) => {}                                                Err(e) => {
                                                     ctx.output.trace_error(format!("Command failed: {e}"))?
                                                 }
                                             }
@@ -155,7 +156,9 @@ fn display_notification(output: &Output, notification: &ServerNotification) -> R
             let logger_str = logger.as_deref().unwrap_or("server");
             output.text(format!(
                 "[NOTIFICATION] {:?} [{}]: {}",
-                level, logger_str, data
+                level,
+                logger_str,
+                data
             ))?;
         }
         ServerNotification::ResourceUpdated { uri } => {
@@ -174,7 +177,8 @@ fn display_notification(output: &Output, notification: &ServerNotification) -> R
             let reason_str = reason.as_deref().unwrap_or("no reason given");
             output.text(format!(
                 "[NOTIFICATION] Request cancelled: {:?} ({})",
-                request_id, reason_str
+                request_id,
+                reason_str
             ))?;
         }
         ServerNotification::Progress {
@@ -187,7 +191,10 @@ fn display_notification(output: &Output, notification: &ServerNotification) -> R
             let message_str = message.as_deref().unwrap_or("");
             output.text(format!(
                 "[NOTIFICATION] Progress {:?}: {}{} - {}",
-                progress_token, progress, total_str, message_str
+                progress_token,
+                progress,
+                total_str,
+                message_str
             ))?;
         }
     }

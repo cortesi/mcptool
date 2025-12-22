@@ -7,8 +7,10 @@ use thiserror::Error;
 
 use crate::storage::StorageError;
 
+use std::result;
+
 /// Type alias for Results using our Error type.
-pub type Result<T> = std::result::Result<T, Error>;
+pub type Result<T> = result::Result<T, Error>;
 
 /// The main error type for mcptool operations.
 #[derive(Error, Debug)]

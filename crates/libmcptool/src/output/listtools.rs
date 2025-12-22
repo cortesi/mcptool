@@ -1,6 +1,10 @@
-use crate::{Result, output::Output};
+use tmcp::schema::{ListToolsResult, ToolSchema};
 
-fn toolschema(output: &Output, schema: &tmcp::schema::ToolSchema) -> Result<()> {
+use crate::Result;
+use crate::output::Output;
+
+/// Formats a tool schema.
+fn toolschema(output: &Output, schema: &ToolSchema) -> Result<()> {
     if let Some(properties) = &schema.properties
         && !properties.is_empty()
     {
@@ -70,7 +74,7 @@ fn toolschema(output: &Output, schema: &tmcp::schema::ToolSchema) -> Result<()> 
 /// Display the list of tools in either JSON or formatted text
 pub fn list_tools_result(
     output: &Output,
-    tools_result: &tmcp::schema::ListToolsResult,
+    tools_result: &ListToolsResult,
 ) -> Result<()> {
     if output.json {
         output.json_value(tools_result)?;

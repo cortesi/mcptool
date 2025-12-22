@@ -1,16 +1,12 @@
-use tmcp::schema::ReadResourceResult;
+use tmcp::schema::{self, ReadResourceResult};
 
-use super::formatter::{MetadataDisplay, OutputFormatter, format_output};
-use crate::Result;
+use crate::{Result, output::Output};
+use crate::output::formatter::{MetadataDisplay, format_output, OutputFormatter};
 
 pub struct ReadResourceFormatter;
 
 impl OutputFormatter<ReadResourceResult> for ReadResourceFormatter {
-    fn format_text(
-        &self,
-        output: &crate::output::Output,
-        result: &ReadResourceResult,
-    ) -> Result<()> {
+    fn format_text(&self, output: &Output, result: &ReadResourceResult) -> Result<()> {
         output.text(format!(
             "Resource contents ({} item(s)):",
             result.contents.len()
@@ -19,12 +15,12 @@ impl OutputFormatter<ReadResourceResult> for ReadResourceFormatter {
         for (i, content) in result.contents.iter().enumerate() {
             output.text(format!("\n--- Content {} ---", i + 1))?;
             match content {
-                tmcp::schema::ResourceContents::Text(text_resource) => {
+                schema::ResourceContents::Text(text_resource) => {
                     MetadataDisplay::display_uri(output, &text_resource.uri)?;
                     MetadataDisplay::display_mime_type(output, &text_resource.mime_type)?;
                     MetadataDisplay::display_text_content(output, &text_resource.text)?;
                 }
-                tmcp::schema::ResourceContents::Blob(blob_resource) => {
+                schema::ResourceContents::Blob(blob_resource) => {
                     MetadataDisplay::display_uri(output, &blob_resource.uri)?;
                     MetadataDisplay::display_mime_type(output, &blob_resource.mime_type)?;
                     MetadataDisplay::display_binary_content(
@@ -40,8 +36,8 @@ impl OutputFormatter<ReadResourceResult> for ReadResourceFormatter {
 }
 
 pub fn read_resource_result(
-    output: &crate::output::Output,
+    output: &Output,
     result: &ReadResourceResult,
 ) -> Result<()> {
-    format_output(output, result, ReadResourceFormatter)
+    format_output(output, result, &ReadResourceFormatter)
 }

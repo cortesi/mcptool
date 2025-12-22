@@ -1,3 +1,4 @@
+use std::fmt;
 use crate::{Result, output::Output};
 
 /// Generic trait for formatting output data in both JSON and text modes
@@ -27,7 +28,7 @@ pub trait OutputFormatter<T> {
 }
 
 /// Helper function to format output using any formatter
-pub fn format_output<T, F>(output: &Output, data: &T, formatter: F) -> Result<()>
+pub fn format_output<T, F>(output: &Output, data: &T, formatter: &F) -> Result<()>
 where
     T: serde::Serialize,
     F: OutputFormatter<T>,
@@ -40,7 +41,7 @@ pub struct TextFormatter;
 
 impl<T> OutputFormatter<T> for TextFormatter
 where
-    T: std::fmt::Debug,
+    T: fmt::Debug,
 {
     fn format_text(&self, output: &Output, data: &T) -> Result<()> {
         output.text(format!("{:?}", data))?;

@@ -23,6 +23,8 @@ pub mod readresource;
 
 use std::{
     io::{self, Write},
+    result,
+    str::FromStr,
     sync::{Arc, Mutex},
 };
 
@@ -34,7 +36,7 @@ use syntect::{
 };
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 use textwrap::{Options, wrap};
-use tracing::{Event, Level, Subscriber};
+use tracing::{Event, Level, Subscriber, field};
 use tracing_subscriber::{
     EnvFilter,
     layer::{Context, Layer, SubscriberExt},
@@ -78,10 +80,10 @@ impl LogLevel {
     }
 }
 
-impl std::str::FromStr for LogLevel {
+impl FromStr for LogLevel {
     type Err = String;
 
-    fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
+    fn from_str(s: &str) -> result::Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
             "error" => Ok(Self::Error),
             "warn" => Ok(Self::Warn),
@@ -94,8 +96,11 @@ impl std::str::FromStr for LogLevel {
 }
 
 /// Solarized Dark color scheme
+#[allow(dead_code)]
 struct SolarizedDark;
 
+#[allow(dead_code)]
+#[allow(missing_docs)]
 impl SolarizedDark {
     // Background tones
     const BASE03: Color = Color::Rgb(0, 43, 54); // darkest background
@@ -129,6 +134,7 @@ impl SolarizedDark {
 ///
 /// The struct is `Clone` and thread-safe, allowing it to be shared across different
 /// parts of the application.
+#[allow(missing_docs)]
 #[derive(Clone)]
 pub struct Output {
     stdout: Arc<Mutex<StandardStream>>,
@@ -542,6 +548,7 @@ impl Default for Output {
 /// the tracing ecosystem. It captures log events and forwards them to the Output
 /// struct for consistent formatting. This allows application logs to respect the
 /// same formatting rules (including JSON mode) as regular output.
+#[allow(missing_docs)]
 pub struct OutputLayer {
     output: Output,
 }
@@ -564,7 +571,7 @@ where
         event.record(&mut visitor);
         let message = visitor.message;
 
-        let _ = self.output.trace(&message, *level);
+        self.output.trace(&message, *level).ok();
     }
 }
 
@@ -573,18 +580,19 @@ where
 /// This struct implements the `tracing::field::Visit` trait to extract the message
 /// field from tracing events. It's used internally by `OutputLayer` to get the
 /// actual log message text that needs to be formatted and displayed.
+#[allow(missing_docs)]
 struct MessageVisitor {
     message: String,
 }
 
-impl tracing::field::Visit for MessageVisitor {
-    fn record_debug(&mut self, field: &tracing::field::Field, value: &dyn std::fmt::Debug) {
+impl field::Visit for MessageVisitor {
+    fn record_debug(&mut self, field: &field::Field, value: &dyn std::fmt::Debug) {
         if field.name() == "message" {
             self.message = format!("{value:?}");
         }
     }
 
-    fn record_str(&mut self, field: &tracing::field::Field, value: &str) {
+    fn record_str(&mut self, field: &field::Field, value: &str) {
         if field.name() == "message" {
             self.message = value.to_string();
         }

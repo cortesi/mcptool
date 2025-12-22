@@ -1,4 +1,4 @@
-use std::{collections::HashMap, fs, path::PathBuf, time::SystemTime};
+use std::{collections::HashMap, fs, io, path::PathBuf, time::SystemTime};
 
 use serde::{Deserialize, Serialize};
 
@@ -7,7 +7,7 @@ pub enum StorageError {
     #[error("Serialization error: {0}")]
     Serialization(#[from] serde_json::Error),
     #[error("IO error: {0}")]
-    Io(#[from] std::io::Error),
+    Io(#[from] io::Error),
     #[error("Entry not found: {0}")]
     NotFound(String),
 }
@@ -101,14 +101,15 @@ impl TokenStorage {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::{env, process, time::UNIX_EPOCH};
 
     #[test]
     fn test_storage_lifecycle() {
-        let test_dir = std::env::temp_dir().join("mcptool_test").join(format!(
+        let test_dir = env::temp_dir().join("mcptool_test").join(format!(
             "test_{}_{}",
-            std::process::id(),
-            std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
+            process::id(),
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
                 .unwrap()
                 .as_nanos()
         ));

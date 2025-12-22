@@ -5,10 +5,16 @@ use std::{
 
 use rustyline::DefaultEditor;
 use tmcp::auth::{OAuth2CallbackServer, OAuth2Client, OAuth2Config, OAuth2Token};
+use tokio::signal;
 use tokio::time::timeout;
 
 use crate::{
-    Error, Result, auth::validate_auth_name, ctx::Ctx, output::Output, storage::StoredAuth,
+    Error,
+    Result,
+    auth::validate_auth_name,
+    ctx::Ctx,
+    output::Output,
+    storage::StoredAuth,
 };
 
 pub struct AddCommandArgs {
@@ -50,7 +56,7 @@ pub async fn add_command(ctx: &Ctx, args: AddCommandArgs) -> Result<()> {
         None => {
             ctx.output.text("Enter the OAuth provider configuration:")?;
             ctx.output.text("")?;
-            rl.readline("Server URL (e.g., https://api.example.com): ")?
+            rl.readline("Server URL (e.g., https://api.example.com): ")? 
         }
     };
 
@@ -73,7 +79,7 @@ pub async fn add_command(ctx: &Ctx, args: AddCommandArgs) -> Result<()> {
     let client_secret = match args.client_secret {
         Some(secret) => Some(secret),
         None => {
-            let client_secret_input =
+            let client_secret_input = 
                 rl.readline("Client Secret (optional, press Enter to skip): ")?;
             if client_secret_input.trim().is_empty() {
                 None
@@ -117,7 +123,7 @@ pub async fn add_command(ctx: &Ctx, args: AddCommandArgs) -> Result<()> {
             .text("Add this URL to your OAuth application settings.")?;
         ctx.output
             .text("Then run the command again without --show-redirect-url to complete setup.")?;
-        return Ok(());
+        return Ok(())
     }
 
     // Resource (audience) - use flag or default
@@ -199,7 +205,7 @@ pub async fn add_command(ctx: &Ctx, args: AddCommandArgs) -> Result<()> {
             result = wait_for_callback(&mut oauth_client, callback_server, csrf_token.secret().to_string()) => {
                 Ok(result)
             }
-            _ = tokio::signal::ctrl_c() => {
+            _ = signal::ctrl_c() => {
                 ctx.output.text("")?;
                 ctx.output.trace_warn("Cancelled! Switching to manual mode...")?;
                 timeout(
@@ -411,7 +417,7 @@ mod tests {
     use crate::auth::validate_auth_name;
 
     #[test]
-    fn test_validate_auth_name() {
+    fn test_validate_auth_name_valid() {
         // Valid names
         assert!(validate_auth_name("myauth").is_ok());
         assert!(validate_auth_name("my_auth").is_ok());
@@ -420,9 +426,10 @@ mod tests {
         assert!(validate_auth_name("a").is_ok());
         assert!(validate_auth_name("_").is_ok());
         assert!(validate_auth_name("123").is_ok());
+    }
 
-        // Invalid names
-        assert!(validate_auth_name("").is_err());
+    #[test]
+    fn test_validate_auth_name_invalid_chars_1() {
         assert!(validate_auth_name("my-auth").is_err());
         assert!(validate_auth_name("my auth").is_err());
         assert!(validate_auth_name("my:auth").is_err());
@@ -437,6 +444,10 @@ mod tests {
         assert!(validate_auth_name("my*auth").is_err());
         assert!(validate_auth_name("my(auth)").is_err());
         assert!(validate_auth_name("my[auth]").is_err());
+    }
+
+    #[test]
+    fn test_validate_auth_name_invalid_chars_2() {
         assert!(validate_auth_name("my{auth}").is_err());
         assert!(validate_auth_name("my|auth").is_err());
         assert!(validate_auth_name("my\\auth").is_err());
@@ -451,7 +462,11 @@ mod tests {
         assert!(validate_auth_name("my+auth").is_err());
         assert!(validate_auth_name("my=auth").is_err());
         assert!(validate_auth_name("my,auth").is_err());
+    }
 
+    #[test]
+    fn test_validate_auth_name_invalid_misc() {
+        assert!(validate_auth_name("").is_err());
         // Unicode characters should be invalid
         assert!(validate_auth_name("myαuth").is_err());
         assert!(validate_auth_name("my😀auth").is_err());

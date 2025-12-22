@@ -143,6 +143,8 @@ async fn connect_with_auth<C: ClientConn + Send + 'static>(
     Ok((client, init_result))
 }
 
+use tokio::process::Command;
+
 /// Connects to an MCP server without authentication.
 pub async fn connect_to_server<C: ClientConn + Send + 'static>(
     target: &Target,
@@ -158,7 +160,7 @@ pub async fn connect_to_server<C: ClientConn + Send + 'static>(
             })?
         }
         Target::Stdio { command, args } => {
-            let mut cmd = tokio::process::Command::new(command.clone());
+            let mut cmd = Command::new(command.clone());
             cmd.args(args);
 
             let _child = client

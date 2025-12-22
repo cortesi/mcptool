@@ -1,6 +1,6 @@
 use std::fmt;
 
-use crate::{Error, Result};
+use crate::{Error, Result, auth::validate_auth_name};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Target {
@@ -188,7 +188,7 @@ impl Target {
         }
 
         // Validate the auth name using the shared validation function
-        crate::auth::validate_auth_name(input)?;
+        validate_auth_name(input)?;
 
         Ok(Self::Auth {
             name: input.to_string(),
