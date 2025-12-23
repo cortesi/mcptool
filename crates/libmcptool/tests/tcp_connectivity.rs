@@ -1,6 +1,7 @@
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
     net::{TcpListener, TcpStream},
+    time::{Duration, sleep},
 };
 
 #[tokio::test]
@@ -32,7 +33,7 @@ async fn test_tcp_port_connectivity() {
             .expect("Failed to write to stream");
     });
 
-    tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+    sleep(Duration::from_millis(100)).await;
 
     let mut client = TcpStream::connect(addr)
         .await
@@ -81,10 +82,10 @@ async fn test_connect_to_open_port() {
     let addr = listener.local_addr().expect("Failed to get local address");
 
     let _server_handle = tokio::spawn(async move {
-        let _ = listener.accept().await;
+        drop(listener.accept().await);
     });
 
-    tokio::time::sleep(tokio::time::Duration::from_millis(50)).await;
+    sleep(Duration::from_millis(50)).await;
 
     let result = TcpStream::connect(addr).await;
     assert!(result.is_ok(), "Should successfully connect to open port");
@@ -107,8 +108,8 @@ async fn test_multiple_connections() {
 
             tokio::spawn(async move {
                 let mut buf = [0; 1024];
-                let _ = stream.read(&mut buf).await;
-                let _ = stream.write_all(b"OK").await;
+                drop(stream.read(&mut buf).await);
+                drop(stream.write_all(b"OK").await);
             });
         }
     });
@@ -144,7 +145,7 @@ async fn test_verify_port_is_actually_open() {
     let server_handle = tokio::spawn(async move {
         while let Ok((mut stream, _)) = listener.accept().await {
             // Echo back a simple message
-            let _ = stream.write_all(b"PORT_IS_OPEN").await;
+            drop(stream.write_all(b"PORT_IS_OPEN").await);
         }
     });
 

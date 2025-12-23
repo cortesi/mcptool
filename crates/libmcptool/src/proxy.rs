@@ -1,8 +1,8 @@
-use std::path::PathBuf;
+use std::{path::PathBuf, process::Stdio};
 
 use chrono::Utc;
 use tokio::{
-    fs::OpenOptions,
+    fs::{File, OpenOptions},
     io::{self, AsyncReadExt, AsyncWriteExt},
     net::TcpStream,
     process::Command,
@@ -10,7 +10,8 @@ use tokio::{
 
 use crate::{Error, Result, target::Target};
 
-async fn log_traffic(log_writer: &mut tokio::fs::File, direction: &str, data: &[u8]) -> Result<()> {
+/// Logs traffic data to the log file with timestamp and direction indicator.
+async fn log_traffic(log_writer: &mut File, direction: &str, data: &[u8]) -> Result<()> {
     let timestamp = Utc::now().to_rfc3339();
     log_writer
         .write_all(format!("{timestamp}\n{direction}:\n").as_bytes())
@@ -21,10 +22,11 @@ async fn log_traffic(log_writer: &mut tokio::fs::File, direction: &str, data: &[
     Ok(())
 }
 
+/// Forwards data from client to server and logs the traffic.
 async fn handle_client_to_server<W>(
     data: &[u8],
     target: &mut W,
-    log_writer: &mut tokio::fs::File,
+    log_writer: &mut File,
 ) -> Result<()>
 where
     W: AsyncWriteExt + Unpin,
@@ -35,10 +37,11 @@ where
     Ok(())
 }
 
+/// Forwards data from server to client and logs the traffic.
 async fn handle_server_to_client<W>(
     data: &[u8],
     writer: &mut W,
-    log_writer: &mut tokio::fs::File,
+    log_writer: &mut File,
 ) -> Result<()>
 where
     W: AsyncWriteExt + Unpin,
@@ -70,8 +73,8 @@ pub async fn proxy_command(target: Target, log_file: PathBuf) -> Result<()> {
         Target::Stdio { command, args } => {
             let mut cmd = Command::new(command);
             cmd.args(args);
-            cmd.stdin(std::process::Stdio::piped());
-            cmd.stdout(std::process::Stdio::piped());
+            cmd.stdin(Stdio::piped());
+            cmd.stdout(Stdio::piped());
 
             let mut child = cmd.spawn()?;
             let child_stdin = child.stdin.take().unwrap();
@@ -102,11 +105,12 @@ pub async fn proxy_command(target: Target, log_file: PathBuf) -> Result<()> {
     Ok(())
 }
 
+/// Proxies bidirectional traffic between reader/writer and a target stream.
 async fn proxy_streams<R, W, T>(
     mut reader: R,
     mut writer: W,
     mut target: T,
-    log_writer: &mut tokio::fs::File,
+    log_writer: &mut File,
 ) -> Result<()>
 where
     R: AsyncReadExt + Unpin,
@@ -144,12 +148,13 @@ where
     Ok(())
 }
 
+/// Proxies bidirectional traffic between reader/writer and a child process.
 async fn proxy_process_streams<R, W, S, T>(
     mut reader: R,
     mut writer: W,
     mut target_stdin: S,
     mut target_stdout: T,
-    log_writer: &mut tokio::fs::File,
+    log_writer: &mut File,
 ) -> Result<()>
 where
     R: AsyncReadExt + Unpin,

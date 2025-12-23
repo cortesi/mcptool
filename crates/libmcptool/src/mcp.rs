@@ -1,7 +1,7 @@
 //! MCP client command implementations.
 
 use tmcp::{
-    Client, ClientConn, ServerAPI,
+    Client, ClientHandler, ServerAPI,
     schema::{
         ArgumentInfo, InitializeResult, LoggingLevel, PromptReference, Reference, ResourceReference,
     },
@@ -12,7 +12,10 @@ use crate::{
 };
 
 /// Pings the MCP server.
-pub async fn ping<C: ClientConn + 'static>(client: &mut Client<C>, output: &Output) -> Result<()> {
+pub async fn ping<C: ClientHandler + 'static>(
+    client: &mut Client<C>,
+    output: &Output,
+) -> Result<()> {
     output.text("Pinging")?;
     client.ping().timed("   response", output).await?;
     output.ping()?;
@@ -20,7 +23,7 @@ pub async fn ping<C: ClientConn + 'static>(client: &mut Client<C>, output: &Outp
 }
 
 /// Lists all available tools from the MCP server.
-pub async fn listtools<C: ClientConn + 'static>(
+pub async fn listtools<C: ClientHandler + 'static>(
     client: &mut Client<C>,
     output: &Output,
 ) -> Result<()> {
@@ -40,7 +43,7 @@ pub fn init(init_result: &InitializeResult, output: &Output) -> Result<()> {
 }
 
 /// Lists all available resources from the MCP server.
-pub async fn listresources<C: ClientConn + 'static>(
+pub async fn listresources<C: ClientHandler + 'static>(
     client: &mut Client<C>,
     output: &Output,
 ) -> Result<()> {
@@ -54,7 +57,7 @@ pub async fn listresources<C: ClientConn + 'static>(
 }
 
 /// Lists all available prompts from the MCP server.
-pub async fn listprompts<C: ClientConn + 'static>(
+pub async fn listprompts<C: ClientHandler + 'static>(
     client: &mut Client<C>,
     output: &Output,
 ) -> Result<()> {
@@ -68,7 +71,7 @@ pub async fn listprompts<C: ClientConn + 'static>(
 }
 
 /// Lists all available resource templates from the MCP server.
-pub async fn listresourcetemplates<C: ClientConn + 'static>(
+pub async fn listresourcetemplates<C: ClientHandler + 'static>(
     client: &mut Client<C>,
     output: &Output,
 ) -> Result<()> {
@@ -82,7 +85,7 @@ pub async fn listresourcetemplates<C: ClientConn + 'static>(
 }
 
 /// Sets the logging level on the MCP server.
-pub async fn set_level<C: ClientConn + 'static>(
+pub async fn set_level<C: ClientHandler + 'static>(
     client: &mut Client<C>,
     output: &Output,
     level: &str,
@@ -118,7 +121,7 @@ pub async fn set_level<C: ClientConn + 'static>(
 }
 
 /// Calls a tool on the MCP server.
-pub async fn calltool<C: ClientConn + 'static>(
+pub async fn calltool<C: ClientHandler + 'static>(
     client: &mut Client<C>,
     output: &Output,
     tool_name: &str,
@@ -175,7 +178,7 @@ pub async fn calltool<C: ClientConn + 'static>(
 }
 
 /// Reads a resource from the MCP server.
-pub async fn read_resource<C: ClientConn + 'static>(
+pub async fn read_resource<C: ClientHandler + 'static>(
     client: &mut Client<C>,
     output: &Output,
     uri: &str,
@@ -190,7 +193,7 @@ pub async fn read_resource<C: ClientConn + 'static>(
 }
 
 /// Gets a prompt from the MCP server.
-pub async fn get_prompt<C: ClientConn + 'static>(
+pub async fn get_prompt<C: ClientHandler + 'static>(
     client: &mut Client<C>,
     output: &Output,
     name: &str,
@@ -210,7 +213,7 @@ pub async fn get_prompt<C: ClientConn + 'static>(
 }
 
 /// Subscribes to resource updates from the MCP server.
-pub async fn subscribe_resource<C: ClientConn + 'static>(
+pub async fn subscribe_resource<C: ClientHandler + 'static>(
     client: &mut Client<C>,
     output: &Output,
     uri: &str,
@@ -225,7 +228,7 @@ pub async fn subscribe_resource<C: ClientConn + 'static>(
 }
 
 /// Unsubscribes from resource updates.
-pub async fn unsubscribe_resource<C: ClientConn + 'static>(
+pub async fn unsubscribe_resource<C: ClientHandler + 'static>(
     client: &mut Client<C>,
     output: &Output,
     uri: &str,
@@ -240,7 +243,7 @@ pub async fn unsubscribe_resource<C: ClientConn + 'static>(
 }
 
 /// Gets completions for an argument.
-pub async fn complete<C: ClientConn + 'static>(
+pub async fn complete<C: ClientHandler + 'static>(
     client: &mut Client<C>,
     output: &Output,
     reference: &str,

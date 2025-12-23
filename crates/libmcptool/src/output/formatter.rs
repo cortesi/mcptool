@@ -1,5 +1,5 @@
-use std::fmt;
 use crate::{Result, output::Output};
+use std::fmt;
 
 /// Generic trait for formatting output data in both JSON and text modes
 pub trait OutputFormatter<T> {

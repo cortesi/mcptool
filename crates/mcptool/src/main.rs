@@ -203,10 +203,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     match cli.command {
         Commands::Version => {
             println!("mcptool version {}", ctx::VERSION);
-            println!(
-                "MCP protocol version: {}",
-                LATEST_PROTOCOL_VERSION
-            );
+            println!("MCP protocol version: {}", LATEST_PROTOCOL_VERSION);
         }
 
         Commands::Mcp { mcp_command } => {

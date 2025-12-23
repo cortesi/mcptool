@@ -13,28 +13,16 @@ fn create_test_ctx() -> (Ctx, TempDir) {
 #[tokio::test]
 async fn test_mcp_init_with_test_server() {
     use tmcp::{
-        Server, ServerConn, ServerCtx,
+        Server, ServerCtx, ServerHandler,
         schema::{InitializeResult, ServerCapabilities},
     };
-
-    // Start the test server on a random port
-    let listener = tokio::net::TcpListener::bind("127.0.0.1:0")
-        .await
-        .expect("Failed to bind to local address");
-    let port = listener
-        .local_addr()
-        .expect("Failed to get local address")
-        .port();
-    drop(listener); // Release the port so test server can bind to it
-
-    let (_ctx, _temp_dir) = create_test_ctx();
 
     // Create a simple test server connection that mirrors the testserver behavior
     #[derive(Clone)]
     struct SimpleTestConn;
 
     #[async_trait::async_trait]
-    impl ServerConn for SimpleTestConn {
+    impl ServerHandler for SimpleTestConn {
         async fn initialize(
             &self,
             _context: &ServerCtx,
@@ -51,9 +39,21 @@ async fn test_mcp_init_with_test_server() {
         }
     }
 
+    // Start the test server on a random port
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0")
+        .await
+        .expect("Failed to bind to local address");
+    let port = listener
+        .local_addr()
+        .expect("Failed to get local address")
+        .port();
+    drop(listener); // Release the port so test server can bind to it
+
+    let (_ctx, _temp_dir) = create_test_ctx();
+
     // Create and start the server directly
     let server = Server::default()
-        .with_connection(|| SimpleTestConn)
+        .with_handler(|| SimpleTestConn)
         .with_capabilities(
             ServerCapabilities::default()
                 .with_tools(Some(true))

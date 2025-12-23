@@ -22,6 +22,7 @@ pub mod listtools;
 pub mod readresource;
 
 use std::{
+    fmt,
     io::{self, Write},
     result,
     str::FromStr,
@@ -586,7 +587,7 @@ struct MessageVisitor {
 }
 
 impl field::Visit for MessageVisitor {
-    fn record_debug(&mut self, field: &field::Field, value: &dyn std::fmt::Debug) {
+    fn record_debug(&mut self, field: &field::Field, value: &dyn fmt::Debug) {
         if field.name() == "message" {
             self.message = format!("{value:?}");
         }

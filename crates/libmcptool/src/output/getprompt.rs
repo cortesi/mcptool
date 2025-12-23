@@ -1,7 +1,7 @@
 use tmcp::schema::{self, GetPromptResult};
 
+use crate::output::formatter::{MetadataDisplay, OutputFormatter, format_output};
 use crate::{Result, output::Output};
-use crate::output::formatter::{MetadataDisplay, format_output, OutputFormatter};
 
 pub struct GetPromptFormatter;
 

@@ -4,10 +4,7 @@ use crate::Result;
 use crate::output::Output;
 
 /// Display the list of prompts in either JSON or formatted text
-pub fn list_prompts_result(
-    output: &Output,
-    prompts_result: &ListPromptsResult,
-) -> Result<()> {
+pub fn list_prompts_result(output: &Output, prompts_result: &ListPromptsResult) -> Result<()> {
     if output.json {
         // Output as JSON
         output.json_value(prompts_result)?;

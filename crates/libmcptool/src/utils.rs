@@ -14,11 +14,11 @@ pub trait TimedFuture: Future + Sized {
         let start = Instant::now();
         let result = self.await;
 
-        let _ = output.text(format!(
+        drop(output.text(format!(
             "{} in {:.2}ms",
             title,
             start.elapsed().as_secs_f64() * 1000.0,
-        ));
+        )));
 
         result
     }

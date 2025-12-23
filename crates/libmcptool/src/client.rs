@@ -6,7 +6,7 @@ use std::{
 };
 
 use tmcp::{
-    Client, ClientConn,
+    Client, ClientHandler,
     auth::{OAuth2Client, OAuth2Config, OAuth2Token},
     schema::InitializeResult,
 };
@@ -24,7 +24,7 @@ pub async fn get_client(ctx: &Ctx, target: &Target) -> Result<(Client<()>, Initi
 }
 
 /// Creates an MCP client with a custom connection handler.
-pub async fn get_client_with_connection<C: ClientConn + Send + 'static>(
+pub async fn get_client_with_connection<C: ClientHandler + Send + 'static>(
     ctx: &Ctx,
     target: &Target,
     conn: C,
@@ -51,7 +51,7 @@ pub async fn get_client_with_connection<C: ClientConn + Send + 'static>(
 }
 
 /// Connects to a target using OAuth authentication.
-async fn connect_with_auth<C: ClientConn + Send + 'static>(
+async fn connect_with_auth<C: ClientHandler + Send + 'static>(
     ctx: &Ctx,
     target: &Target,
     auth_name: &str,
@@ -112,7 +112,7 @@ async fn connect_with_auth<C: ClientConn + Send + 'static>(
 
     let oauth_client = Arc::new(oauth_client);
 
-    let mut client = Client::new_with_connection("mcptool", VERSION, conn);
+    let mut client = Client::new("mcptool", VERSION).with_handler(conn);
 
     let init_result = match target {
         Target::Http { host, port } => {
@@ -146,11 +146,11 @@ async fn connect_with_auth<C: ClientConn + Send + 'static>(
 use tokio::process::Command;
 
 /// Connects to an MCP server without authentication.
-pub async fn connect_to_server<C: ClientConn + Send + 'static>(
+pub async fn connect_to_server<C: ClientHandler + Send + 'static>(
     target: &Target,
     conn: C,
 ) -> Result<(Client<C>, InitializeResult)> {
-    let mut client = Client::new_with_connection("mcptool", VERSION, conn);
+    let mut client = Client::new("mcptool", VERSION).with_handler(conn);
 
     let init_result = match target {
         Target::Tcp { host, port } => {

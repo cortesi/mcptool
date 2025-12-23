@@ -72,10 +72,7 @@ fn toolschema(output: &Output, schema: &ToolSchema) -> Result<()> {
 }
 
 /// Display the list of tools in either JSON or formatted text
-pub fn list_tools_result(
-    output: &Output,
-    tools_result: &ListToolsResult,
-) -> Result<()> {
+pub fn list_tools_result(output: &Output, tools_result: &ListToolsResult) -> Result<()> {
     if output.json {
         output.json_value(tools_result)?;
     } else if tools_result.tools.is_empty() {

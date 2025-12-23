@@ -1,7 +1,7 @@
 use tmcp::schema::{self, ReadResourceResult};
 
+use crate::output::formatter::{MetadataDisplay, OutputFormatter, format_output};
 use crate::{Result, output::Output};
-use crate::output::formatter::{MetadataDisplay, format_output, OutputFormatter};
 
 pub struct ReadResourceFormatter;
 
@@ -35,9 +35,6 @@ impl OutputFormatter<ReadResourceResult> for ReadResourceFormatter {
     }
 }
 
-pub fn read_resource_result(
-    output: &Output,
-    result: &ReadResourceResult,
-) -> Result<()> {
+pub fn read_resource_result(output: &Output, result: &ReadResourceResult) -> Result<()> {
     format_output(output, result, &ReadResourceFormatter)
 }

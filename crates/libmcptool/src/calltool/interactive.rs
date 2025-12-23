@@ -154,8 +154,7 @@ mod tests {
         properties: serde_json::Map<String, serde_json::Value>,
         required: Option<Vec<String>>,
     ) -> Tool {
-        let properties_map: HashMap<String, serde_json::Value> =
-            properties.into_iter().collect();
+        let properties_map: HashMap<String, serde_json::Value> = properties.into_iter().collect();
         Tool {
             name: "test_tool".to_string(),
             title: Some("Test tool".to_string()),
@@ -258,11 +257,10 @@ mod tests {
                 parse_interactive_arguments_with_io(&tool, &output, &mut reader, &mut writer)
                     .unwrap()
                     .unwrap();
-            let map =
-                serde_json::from_value::<HashMap<String, serde_json::Value>>(
-                    serde_json::to_value(result).unwrap(),
-                )
-                .unwrap();
+            let map = serde_json::from_value::<HashMap<String, serde_json::Value>>(
+                serde_json::to_value(result).unwrap(),
+            )
+            .unwrap();
             assert_eq!(map.len(), 1);
             assert_eq!(map.get("flag").unwrap(), &serde_json::Value::Bool(expected));
         }

@@ -2,8 +2,11 @@ use std::time::Duration;
 
 use libmcptool::{client, ctx::Ctx, target::Target};
 use tmcp::{
-    ClientConn, ClientCtx, Result as McpResult, Server, ServerAPI, ServerConn, ServerCtx,
-    schema::{ClientNotification, LoggingLevel, ServerCapabilities, ServerNotification},
+    ClientCtx, ClientHandler, Result as McpResult, Server, ServerAPI, ServerCtx, ServerHandler,
+    schema::{
+        ClientCapabilities, ClientNotification, Implementation, InitializeResult, LoggingLevel,
+        ServerCapabilities, ServerNotification,
+    },
 };
 use tokio::{sync::mpsc, time::timeout};
 
@@ -19,15 +22,15 @@ struct SimpleTestClientConn {
 }
 
 #[async_trait::async_trait]
-impl ServerConn for SimpleTestServerConn {
+impl ServerHandler for SimpleTestServerConn {
     async fn initialize(
         &self,
         _context: &ServerCtx,
         _protocol_version: String,
-        _capabilities: tmcp::schema::ClientCapabilities,
-        _client_info: tmcp::schema::Implementation,
-    ) -> McpResult<tmcp::schema::InitializeResult> {
-        Ok(tmcp::schema::InitializeResult::new("test-server").with_version("1.0.0"))
+        _capabilities: ClientCapabilities,
+        _client_info: Implementation,
+    ) -> McpResult<InitializeResult> {
+        Ok(InitializeResult::new("test-server").with_version("1.0.0"))
     }
 
     async fn set_level(&self, context: &ServerCtx, level: LoggingLevel) -> McpResult<()> {
@@ -37,7 +40,7 @@ impl ServerConn for SimpleTestServerConn {
             logger: Some("test-notification".to_string()),
             data: serde_json::json!({ "message": "test-notification-message" }),
         };
-        let _ = context.notify(notification);
+        _ = context.notify(notification);
         Ok(())
     }
 
@@ -46,19 +49,19 @@ impl ServerConn for SimpleTestServerConn {
         _context: &ServerCtx,
         notification: ClientNotification,
     ) -> McpResult<()> {
-        let _ = self.client_notification_sender.send(notification);
+        drop(self.client_notification_sender.send(notification));
         Ok(())
     }
 }
 
 #[async_trait::async_trait]
-impl ClientConn for SimpleTestClientConn {
+impl ClientHandler for SimpleTestClientConn {
     async fn notification(
         &self,
         _context: &ClientCtx,
         notification: ServerNotification,
     ) -> McpResult<()> {
-        let _ = self.server_notification_sender.send(notification);
+        drop(self.server_notification_sender.send(notification));
         Ok(())
     }
 }
@@ -83,7 +86,7 @@ async fn test_set_level_command_notifications_via_tcp() -> Result<(), Box<dyn st
 
     // Start simple test server
     let server = Server::default()
-        .with_connection(move || SimpleTestServerConn {
+        .with_handler(move || SimpleTestServerConn {
             client_notification_sender: client_notification_sender.clone(),
         })
         .with_capabilities(ServerCapabilities::default().with_tools(Some(true)));

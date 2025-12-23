@@ -1,4 +1,4 @@
-use std::time::SystemTime;
+use std::time::{Duration, SystemTime};
 
 use libmcptool::storage::{StorageError, StoredAuth, TokenStorage};
 
@@ -23,7 +23,7 @@ fn test_auth_storage_lifecycle() {
     let storage = create_test_storage();
 
     // Ensure test entry doesn't exist
-    let _ = storage.remove_auth(&test_name);
+    _ = storage.remove_auth(&test_name);
 
     // Create test auth
     let auth = StoredAuth {
@@ -33,7 +33,7 @@ fn test_auth_storage_lifecycle() {
         client_secret: Some("test_secret".to_string()),
         access_token: Some("test_access_token".to_string()),
         refresh_token: Some("test_refresh_token".to_string()),
-        expires_at: Some(SystemTime::now() + std::time::Duration::from_secs(3600)),
+        expires_at: Some(SystemTime::now() + Duration::from_secs(3600)),
         auth_url: "https://test.example.com/auth".to_string(),
         token_url: "https://test.example.com/token".to_string(),
         redirect_url: Some("http://localhost:8080".to_string()),

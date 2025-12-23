@@ -43,7 +43,7 @@ async fn test_ipv6_connectivity() {
     // Spawn a simple server
     tokio::spawn(async move {
         if let Ok((mut socket, _)) = listener.accept().await {
-            let _ = socket.write_all(b"IPv6_WORKS").await;
+            _ = socket.write_all(b"IPv6_WORKS").await;
         }
     });
 

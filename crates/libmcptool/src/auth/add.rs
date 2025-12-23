@@ -9,12 +9,7 @@ use tokio::signal;
 use tokio::time::timeout;
 
 use crate::{
-    Error,
-    Result,
-    auth::validate_auth_name,
-    ctx::Ctx,
-    output::Output,
-    storage::StoredAuth,
+    Error, Result, auth::validate_auth_name, ctx::Ctx, output::Output, storage::StoredAuth,
 };
 
 pub struct AddCommandArgs {
@@ -56,7 +51,7 @@ pub async fn add_command(ctx: &Ctx, args: AddCommandArgs) -> Result<()> {
         None => {
             ctx.output.text("Enter the OAuth provider configuration:")?;
             ctx.output.text("")?;
-            rl.readline("Server URL (e.g., https://api.example.com): ")? 
+            rl.readline("Server URL (e.g., https://api.example.com): ")?
         }
     };
 
@@ -79,7 +74,7 @@ pub async fn add_command(ctx: &Ctx, args: AddCommandArgs) -> Result<()> {
     let client_secret = match args.client_secret {
         Some(secret) => Some(secret),
         None => {
-            let client_secret_input = 
+            let client_secret_input =
                 rl.readline("Client Secret (optional, press Enter to skip): ")?;
             if client_secret_input.trim().is_empty() {
                 None
@@ -123,7 +118,7 @@ pub async fn add_command(ctx: &Ctx, args: AddCommandArgs) -> Result<()> {
             .text("Add this URL to your OAuth application settings.")?;
         ctx.output
             .text("Then run the command again without --show-redirect-url to complete setup.")?;
-        return Ok(())
+        return Ok(());
     }
 
     // Resource (audience) - use flag or default

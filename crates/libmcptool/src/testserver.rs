@@ -7,17 +7,19 @@ use std::{
     time::{Instant, SystemTime, UNIX_EPOCH},
 };
 
-use rustyline::DefaultEditor;
+use rustyline::{DefaultEditor, error::ReadlineError};
 use serde::{Deserialize, Serialize};
 use tmcp::{
-    Error, Result, Server, ServerConn, ServerCtx,
+    Error, Result, Server, ServerCtx, ServerHandler,
     schema::{
-        ClientCapabilities, ClientNotification, Cursor, Implementation, InitializeResult,
-        ListPromptsResult, ListResourcesResult, ListToolsResult, LoggingLevel, ProgressToken,
-        Prompt, PromptArgument, ReadResourceResult, Resource, ServerCapabilities,
-        ServerNotification, Tool, ToolSchema,
+        CallToolResult, ClientCapabilities, ClientNotification, Cursor, GetPromptResult,
+        Implementation, InitializeResult, LATEST_PROTOCOL_VERSION, ListPromptsResult,
+        ListResourceTemplatesResult, ListResourcesResult, ListToolsResult, LoggingLevel,
+        ProgressToken, Prompt, PromptArgument, ReadResourceResult, Resource, ResourceTemplate,
+        ServerCapabilities, ServerNotification, Tool, ToolSchema,
     },
 };
+use tokio::task;
 
 use crate::{ctx::Ctx, output::Output};
 
@@ -69,12 +71,7 @@ impl TestServerState {
         }
     }
 
-    fn add_client(
-        &self,
-        context: &ServerCtx,
-        remote_addr: String,
-        client_info: Implementation,
-    ) {
+    fn add_client(&self, context: &ServerCtx, remote_addr: &str, client_info: Implementation) {
         let client_id = format!(
             "{}_{}",
             remote_addr,
@@ -85,7 +82,7 @@ impl TestServerState {
         );
 
         let info = ClientInfo {
-            remote_addr: remote_addr.clone(),
+            remote_addr: remote_addr.to_string(),
             client_name: client_info.name,
             client_version: client_info.version,
             connected_at: Instant::now(),
@@ -100,7 +97,7 @@ impl TestServerState {
             .unwrap()
             .insert(client_id, context.clone());
 
-        let _ = self
+        _ = self
             .output
             .trace_success(format!("client connected from {}", remote_addr));
     }
@@ -145,8 +142,8 @@ impl TestServerConn {
         context: &ServerCtx,
         notification: ServerNotification,
     ) -> Result<()> {
-        let _ = self.state.output.h1("sending notification");
-        let _ = self.state.output.text(format!(
+        _ = self.state.output.h1("sending notification");
+        _ = self.state.output.text(format!(
             "content: {}",
             serde_json::to_string_pretty(&notification).unwrap()
         ));
@@ -185,10 +182,10 @@ impl TestServerConn {
 }
 
 #[async_trait::async_trait]
-impl ServerConn for TestServerConn {
+impl ServerHandler for TestServerConn {
     async fn on_connect(&self, _context: &ServerCtx, remote_addr: &str) -> Result<()> {
         // Note: We'll add the client in the initialize method when we have more info
-        let _ = self
+        _ = self
             .state
             .output
             .trace_success(format!("client connecting from {remote_addr}"));
@@ -207,13 +204,13 @@ impl ServerConn for TestServerConn {
         client_info: Implementation,
     ) -> Result<InitializeResult> {
         self.state.request_counter.fetch_add(1, Ordering::Relaxed);
-        let _ = self.state.output.h1("initialize");
+        _ = self.state.output.h1("initialize");
         let params = serde_json::json!({
             "protocol_version": protocol_version,
             "capabilities": capabilities,
             "client_info": client_info,
         });
-        let _ = self.state.output.text(format!(
+        _ = self.state.output.text(format!(
             "parameters: {}",
             serde_json::to_string_pretty(&params).unwrap()
         ));
@@ -221,7 +218,7 @@ impl ServerConn for TestServerConn {
         // Add client to shared state with context info
         // Note: We don't have direct access to remote_addr from context, so we'll use a placeholder
         self.state
-            .add_client(context, "client_connection".to_string(), client_info);
+            .add_client(context, "client_connection", client_info);
 
         let result = InitializeResult::new("mcptool-testserver")
             .with_version(env!("CARGO_PKG_VERSION"))
@@ -230,7 +227,7 @@ impl ServerConn for TestServerConn {
             .with_resources(true, true)
             .with_instructions("mcptool test server");
 
-        let _ = self.state.output.text(format!(
+        _ = self.state.output.text(format!(
             "result: {}",
             serde_json::to_string_pretty(&result).unwrap()
         ));
@@ -239,9 +236,9 @@ impl ServerConn for TestServerConn {
     }
 
     async fn pong(&self, _context: &ServerCtx) -> Result<()> {
-        let _ = self.state.output.h1("pong");
-        let _ = self.state.output.text("parameters: {}");
-        let _ = self.state.output.text("result: pong");
+        _ = self.state.output.h1("pong");
+        _ = self.state.output.text("parameters: {}");
+        _ = self.state.output.text("result: pong");
         Ok(())
     }
 
@@ -250,11 +247,11 @@ impl ServerConn for TestServerConn {
         _context: &ServerCtx,
         cursor: Option<Cursor>,
     ) -> Result<ListToolsResult> {
-        let _ = self.state.output.h1("list_tools");
+        _ = self.state.output.h1("list_tools");
         let params = serde_json::json!({
             "cursor": cursor,
         });
-        let _ = self.state.output.text(format!(
+        _ = self.state.output.text(format!(
             "parameters: {}",
             serde_json::to_string_pretty(&params).unwrap()
         ));
@@ -275,7 +272,7 @@ impl ServerConn for TestServerConn {
 
         let result = ListToolsResult::default().with_tool(echo_tool);
 
-        let _ = self.state.output.text(format!(
+        _ = self.state.output.text(format!(
             "result: {}",
             serde_json::to_string_pretty(&result).unwrap()
         ));
@@ -288,13 +285,13 @@ impl ServerConn for TestServerConn {
         context: &ServerCtx,
         name: String,
         arguments: Option<tmcp::Arguments>,
-    ) -> Result<tmcp::schema::CallToolResult> {
-        let _ = self.state.output.h1("call_tool");
+    ) -> Result<CallToolResult> {
+        _ = self.state.output.h1("call_tool");
         let params = serde_json::json!({
             "name": name,
             "arguments": arguments,
         });
-        let _ = self.state.output.text(format!(
+        _ = self.state.output.text(format!(
             "parameters: {}",
             serde_json::to_string_pretty(&params).unwrap()
         ));
@@ -322,10 +319,9 @@ impl ServerConn for TestServerConn {
             .and_then(|args| args.get_string("message"))
             .unwrap_or_else(|| "No message provided".to_string());
 
-        let result =
-            tmcp::schema::CallToolResult::new().with_text_content(format!("Echo: {message}"));
+        let result = CallToolResult::new().with_text_content(format!("Echo: {message}"));
 
-        let _ = self.state.output.text(format!(
+        _ = self.state.output.text(format!(
             "result: {}",
             serde_json::to_string_pretty(&result).unwrap()
         ));
@@ -346,8 +342,8 @@ impl ServerConn for TestServerConn {
         context: &ServerCtx,
         notification: ClientNotification,
     ) -> Result<()> {
-        let _ = self.state.output.h1("notification");
-        let _ = self.state.output.text(format!(
+        _ = self.state.output.h1("notification");
+        _ = self.state.output.text(format!(
             "content: {}",
             serde_json::to_string_pretty(&notification).unwrap()
         ));
@@ -364,8 +360,8 @@ impl ServerConn for TestServerConn {
     }
 
     async fn set_level(&self, context: &ServerCtx, level: LoggingLevel) -> Result<()> {
-        let _ = self.state.output.h1("set_level");
-        let _ = self.state.output.text(format!(
+        _ = self.state.output.h1("set_level");
+        _ = self.state.output.text(format!(
             "level: {}",
             serde_json::to_string_pretty(&level).unwrap()
         ));
@@ -418,11 +414,11 @@ impl ServerConn for TestServerConn {
         _context: &ServerCtx,
         cursor: Option<Cursor>,
     ) -> Result<ListPromptsResult> {
-        let _ = self.state.output.h1("list_prompts");
+        _ = self.state.output.h1("list_prompts");
         let params = serde_json::json!({
             "cursor": cursor,
         });
-        let _ = self.state.output.text(format!(
+        _ = self.state.output.text(format!(
             "parameters: {}",
             serde_json::to_string_pretty(&params).unwrap()
         ));
@@ -473,7 +469,7 @@ impl ServerConn for TestServerConn {
             .with_prompt(greeting_prompt)
             .with_prompt(code_review_prompt);
 
-        let _ = self.state.output.text(format!(
+        _ = self.state.output.text(format!(
             "result: {}",
             serde_json::to_string_pretty(&result).unwrap()
         ));
@@ -486,13 +482,13 @@ impl ServerConn for TestServerConn {
         _context: &ServerCtx,
         name: String,
         arguments: Option<tmcp::Arguments>,
-    ) -> Result<tmcp::schema::GetPromptResult> {
-        let _ = self.state.output.h1("get_prompt");
+    ) -> Result<GetPromptResult> {
+        _ = self.state.output.h1("get_prompt");
         let params = serde_json::json!({
             "name": name,
             "arguments": arguments,
         });
-        let _ = self.state.output.text(format!(
+        _ = self.state.output.text(format!(
             "parameters: {}",
             serde_json::to_string_pretty(&params).unwrap()
         ));
@@ -513,7 +509,7 @@ impl ServerConn for TestServerConn {
                     _ => format!("Hey {name}! What's up?"),
                 };
 
-                tmcp::schema::GetPromptResult::new()
+                GetPromptResult::new()
                     .with_description("A personalized greeting")
                     .with_message(tmcp::schema::PromptMessage::user_text(message))
             }
@@ -531,14 +527,14 @@ impl ServerConn for TestServerConn {
                     "Please review the following {language} code:\n\n```{language}\n{code}\n```\n\nProvide feedback on code quality, potential bugs, and improvements."
                 );
 
-                tmcp::schema::GetPromptResult::new()
+                GetPromptResult::new()
                     .with_description("Code review request")
                     .with_message(tmcp::schema::PromptMessage::user_text(review))
             }
             _ => return Err(Error::MethodNotFound(format!("Unknown prompt: {name}"))),
         };
 
-        let _ = self.state.output.text(format!(
+        _ = self.state.output.text(format!(
             "result: {}",
             serde_json::to_string_pretty(&result).unwrap()
         ));
@@ -551,11 +547,11 @@ impl ServerConn for TestServerConn {
         _context: &ServerCtx,
         cursor: Option<Cursor>,
     ) -> Result<ListResourcesResult> {
-        let _ = self.state.output.h1("list_resources");
+        _ = self.state.output.h1("list_resources");
         let params = serde_json::json!({
             "cursor": cursor,
         });
-        let _ = self.state.output.text(format!(
+        _ = self.state.output.text(format!(
             "parameters: {}",
             serde_json::to_string_pretty(&params).unwrap()
         ));
@@ -578,7 +574,7 @@ impl ServerConn for TestServerConn {
             .with_resource(sample_data_resource)
             .with_resource(metrics_resource);
 
-        let _ = self.state.output.text(format!(
+        _ = self.state.output.text(format!(
             "result: {}",
             serde_json::to_string_pretty(&result).unwrap()
         ));
@@ -587,11 +583,11 @@ impl ServerConn for TestServerConn {
     }
 
     async fn read_resource(&self, context: &ServerCtx, uri: String) -> Result<ReadResourceResult> {
-        let _ = self.state.output.h1("read_resource");
+        _ = self.state.output.h1("read_resource");
         let params = serde_json::json!({
             "uri": uri,
         });
-        let _ = self.state.output.text(format!(
+        _ = self.state.output.text(format!(
             "parameters: {}",
             serde_json::to_string_pretty(&params).unwrap()
         ));
@@ -658,7 +654,7 @@ impl ServerConn for TestServerConn {
             _ => return Err(Error::ResourceNotFound { uri }),
         };
 
-        let _ = self.state.output.text(format!(
+        _ = self.state.output.text(format!(
             "result: {}",
             serde_json::to_string_pretty(&result).unwrap()
         ));
@@ -670,45 +666,40 @@ impl ServerConn for TestServerConn {
         &self,
         _context: &ServerCtx,
         cursor: Option<Cursor>,
-    ) -> Result<tmcp::schema::ListResourceTemplatesResult> {
-        let _ = self.state.output.h1("list_resource_templates");
+    ) -> Result<ListResourceTemplatesResult> {
+        _ = self.state.output.h1("list_resource_templates");
         let params = serde_json::json!({
             "cursor": cursor,
         });
-        let _ = self.state.output.text(format!(
+        _ = self.state.output.text(format!(
             "parameters: {}",
             serde_json::to_string_pretty(&params).unwrap()
         ));
 
         // Create sample resource templates
-        let user_template = tmcp::schema::ResourceTemplate::new(
-            "user-profile",
-            "user://testserver/{user_id}/profile",
-        )
-        .with_title("User Profile")
-        .with_description("Access user profile information by ID")
-        .with_mime_type("application/json");
+        let user_template =
+            ResourceTemplate::new("user-profile", "user://testserver/{user_id}/profile")
+                .with_title("User Profile")
+                .with_description("Access user profile information by ID")
+                .with_mime_type("application/json");
 
-        let log_template =
-            tmcp::schema::ResourceTemplate::new("dated-log", "log://testserver/{date}/entries")
-                .with_title("Daily Log Entries")
-                .with_description("Server log entries for a specific date (YYYY-MM-DD)")
-                .with_mime_type("text/plain")
-                .with_annotations(
-                    tmcp::schema::Annotations::new()
-                        .with_priority(0.8)
-                        .with_audience(vec![tmcp::schema::Role::Assistant]),
-                );
+        let log_template = ResourceTemplate::new("dated-log", "log://testserver/{date}/entries")
+            .with_title("Daily Log Entries")
+            .with_description("Server log entries for a specific date (YYYY-MM-DD)")
+            .with_mime_type("text/plain")
+            .with_annotations(
+                tmcp::schema::Annotations::new()
+                    .with_priority(0.8)
+                    .with_audience(vec![tmcp::schema::Role::Assistant]),
+            );
 
-        let config_template = tmcp::schema::ResourceTemplate::new(
-            "config-section",
-            "config://testserver/{section}/{key}",
-        )
-        .with_title("Configuration Values")
-        .with_description("Access configuration values by section and key")
-        .with_mime_type("text/plain");
+        let config_template =
+            ResourceTemplate::new("config-section", "config://testserver/{section}/{key}")
+                .with_title("Configuration Values")
+                .with_description("Access configuration values by section and key")
+                .with_mime_type("text/plain");
 
-        let metrics_template = tmcp::schema::ResourceTemplate::new(
+        let metrics_template = ResourceTemplate::new(
             "metric-history",
             "metrics://testserver/{metric_name}/history?period={period}",
         )
@@ -721,13 +712,13 @@ impl ServerConn for TestServerConn {
                 .with_last_modified(chrono::Local::now().to_rfc3339()),
         );
 
-        let result = tmcp::schema::ListResourceTemplatesResult::default()
+        let result = ListResourceTemplatesResult::default()
             .with_resource_template(user_template)
             .with_resource_template(log_template)
             .with_resource_template(config_template)
             .with_resource_template(metrics_template);
 
-        let _ = self.state.output.text(format!(
+        _ = self.state.output.text(format!(
             "result: {}",
             serde_json::to_string_pretty(&result).unwrap()
         ));
@@ -740,13 +731,15 @@ impl ServerConn for TestServerConn {
 async fn run_interactive_repl(
     ctx: &Ctx,
     server_address: String,
-    server_state: TestServerState,
+    server_state: &TestServerState,
 ) -> crate::Result<()> {
     // Run the entire REPL in a blocking task to avoid blocking the tokio executor
     // TODO Use mpsc to pass stuff around
     let ctx_clone = ctx.clone();
-    tokio::task::spawn_blocking(move || {
-        run_interactive_repl_blocking(&ctx_clone, server_address, server_state)
+    let server_state = server_state.clone();
+    let server_address = server_address.clone();
+    task::spawn_blocking(move || {
+        run_interactive_repl_blocking(&ctx_clone, &server_address, &server_state)
     })
     .await
     .map_err(|e| crate::Error::Internal(e.to_string()))??;
@@ -757,8 +750,8 @@ async fn run_interactive_repl(
 /// Blocking version of the interactive REPL
 fn run_interactive_repl_blocking(
     ctx: &Ctx,
-    server_address: String,
-    server_state: TestServerState,
+    server_address: &str,
+    server_state: &TestServerState,
 ) -> crate::Result<()> {
     let mut rl = DefaultEditor::new()?;
     let rt_handle = tokio::runtime::Handle::current();
@@ -983,8 +976,7 @@ fn run_interactive_repl_blocking(
                             data: serde_json::json!({ "message": format!("Server log level changed to: {:?}", level) }),
                         };
 
-                        let _ =
-                            rt_handle.block_on(server_state.broadcast_notification(notification));
+                        _ = rt_handle.block_on(server_state.broadcast_notification(notification));
                     }
                     _ => {
                         ctx.output
@@ -993,11 +985,11 @@ fn run_interactive_repl_blocking(
                     }
                 }
             }
-            Err(rustyline::error::ReadlineError::Interrupted) => {
+            Err(ReadlineError::Interrupted) => {
                 ctx.output.text("CTRL-C")?;
                 break;
             }
-            Err(rustyline::error::ReadlineError::Eof) => {
+            Err(ReadlineError::Eof) => {
                 ctx.output.text("CTRL-D")?;
                 break;
             }
@@ -1016,14 +1008,14 @@ fn create_test_server(
     output: Output,
     request_counter: Arc<AtomicU64>,
 ) -> (
-    Server<impl Fn() -> Box<dyn ServerConn> + Clone + Send + Sync + 'static>,
+    Server<impl Fn() -> Box<dyn ServerHandler> + Clone + Send + Sync + 'static>,
     TestServerState,
 ) {
     let state = TestServerState::new(output, request_counter);
     let state_for_conn = state.clone();
 
     let server = Server::default()
-        .with_connection(move || TestServerConn::new(state_for_conn.clone()))
+        .with_handler(move || TestServerConn::new(state_for_conn.clone()))
         .with_capabilities(
             ServerCapabilities::default()
                 .with_tools(Some(true))
@@ -1046,24 +1038,23 @@ where
     F: FnOnce() -> Fut,
     Fut: std::future::Future<Output = Result<()>>,
 {
-    let _ = output.trace_success(format!("Listening on: {}", server_address));
-    let _ = output.text("Starting interactive mode...");
+    _ = output.trace_success(format!("Listening on: {}", server_address));
+    _ = output.text("Starting interactive mode...");
 
     let ctx_clone = ctx.clone();
-    let server_state_clone = server_state.clone();
 
     // Start server and REPL concurrently
     tokio::select! {
         result = server_starter() => {
-            let _ = output.text("Closing tcp server...");
+            _ = output.text("Closing tcp server...");
             result?;
         }
         // TODO Fix this
         // _ = tokio::signal::ctrl_c() => {
-        //     let _ = output.trace_warn("Shutting down server...");
+        //     _ = output.trace_warn("Shutting down server...");
         //     result.stop().await?;
         // }
-        resultb = run_interactive_repl(&ctx_clone, server_address, server_state_clone) => {
+        resultb = run_interactive_repl(&ctx_clone, server_address, &server_state) => {
             resultb.map_err(|e| Error::InternalError(e.to_string()))?;
         }
     }
@@ -1073,13 +1064,13 @@ where
 
 /// Handle non-interactive mode for TCP server
 async fn handle_tcp_non_interactive(
-    server: Server<impl Fn() -> Box<dyn ServerConn> + Clone + Send + Sync + 'static>,
+    server: Server<impl Fn() -> Box<dyn ServerHandler> + Clone + Send + Sync + 'static>,
     addr: &str,
     output: &Output,
 ) -> Result<()> {
-    let _ = output.text("Transport: TCP");
-    let _ = output.trace_success(format!("Listening on: tcp://{}", addr));
-    let _ = output.text("Press Ctrl+C to stop the server");
+    _ = output.text("Transport: TCP");
+    _ = output.trace_success(format!("Listening on: tcp://{}", addr));
+    _ = output.text("Press Ctrl+C to stop the server");
     server.serve_tcp(addr).await
 }
 
@@ -1112,12 +1103,9 @@ pub async fn run_test_server(
         ctx.output.clone()
     };
 
-    let _ = output.h1("mcptool testserver");
-    let _ = output.text(format!("Version: {}", env!("CARGO_PKG_VERSION")));
-    let _ = output.text(format!(
-        "Protocol: {}",
-        tmcp::schema::LATEST_PROTOCOL_VERSION
-    ));
+    _ = output.h1("mcptool testserver");
+    _ = output.text(format!("Version: {}", env!("CARGO_PKG_VERSION")));
+    _ = output.text(format!("Protocol: {}", LATEST_PROTOCOL_VERSION));
 
     // Create shared request counter for interactive mode
     let request_counter = Arc::new(AtomicU64::new(0));
