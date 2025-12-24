@@ -1,3 +1,6 @@
+//! Integration tests for IPv6 connectivity functionality.
+#![allow(clippy::tests_outside_test_module)]
+
 use libmcptool::target::Target;
 use tokio::{io::AsyncWriteExt, net::TcpListener};
 

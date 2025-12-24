@@ -1,4 +1,5 @@
-#![allow(missing_docs)]
+//! mcptool CLI application for interacting with MCP servers.
+#![allow(clippy::missing_docs_in_private_items)]
 use std::error::Error;
 use std::path::PathBuf;
 

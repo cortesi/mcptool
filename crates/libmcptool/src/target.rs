@@ -29,6 +29,7 @@ impl Target {
         }
     }
 
+    /// Parses a TCP target specification from the given input string.
     fn parse_tcp(input: &str) -> Result<Self> {
         if input.is_empty() {
             return Err(Error::Format("Empty host specification".to_string()));
@@ -101,6 +102,7 @@ impl Target {
         }
     }
 
+    /// Parses a stdio target specification from the given input string.
     fn parse_stdio(input: &str) -> Result<Self> {
         if input.is_empty() {
             return Err(Error::Format("Empty command specification".to_string()));
@@ -120,14 +122,17 @@ impl Target {
         Ok(Self::Stdio { command, args })
     }
 
+    /// Parses an HTTP target specification from the given input string.
     fn parse_http(input: &str) -> Result<Self> {
         Self::parse_http_common(input, 80, |host, port| Self::Http { host, port })
     }
 
+    /// Parses an HTTPS target specification from the given input string.
     fn parse_https(input: &str) -> Result<Self> {
         Self::parse_http_common(input, 443, |host, port| Self::Https { host, port })
     }
 
+    /// Common parsing logic for HTTP and HTTPS targets.
     fn parse_http_common<F>(input: &str, default_port: u16, constructor: F) -> Result<Self>
     where
         F: Fn(String, u16) -> Self,
@@ -182,6 +187,7 @@ impl Target {
         }
     }
 
+    /// Parses an auth target specification from the given input string.
     fn parse_auth(input: &str) -> Result<Self> {
         if input.is_empty() {
             return Err(Error::Format("Empty auth name".to_string()));

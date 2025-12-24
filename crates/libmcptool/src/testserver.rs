@@ -1,5 +1,6 @@
 use std::{
     collections::HashMap,
+    future::Future,
     sync::{
         Arc, Mutex,
         atomic::{AtomicU64, Ordering},
@@ -12,19 +13,20 @@ use serde::{Deserialize, Serialize};
 use tmcp::{
     Error, Result, Server, ServerCtx, ServerHandler,
     schema::{
-        CallToolResult, ClientCapabilities, ClientNotification, Cursor, GetPromptResult,
-        Implementation, InitializeResult, LATEST_PROTOCOL_VERSION, ListPromptsResult,
-        ListResourceTemplatesResult, ListResourcesResult, ListToolsResult, LoggingLevel,
-        ProgressToken, Prompt, PromptArgument, ReadResourceResult, Resource, ResourceTemplate,
-        ServerCapabilities, ServerNotification, Tool, ToolSchema,
+        Annotations, CallToolResult, ClientCapabilities, ClientNotification, Cursor,
+        GetPromptResult, Implementation, InitializeResult, LATEST_PROTOCOL_VERSION,
+        ListPromptsResult, ListResourceTemplatesResult, ListResourcesResult, ListToolsResult,
+        LoggingLevel, ProgressToken, Prompt, PromptArgument, PromptMessage, ReadResourceResult,
+        Resource, ResourceTemplate, Role, ServerCapabilities, ServerNotification, Tool, ToolSchema,
     },
 };
-use tokio::task;
+use tokio::{runtime::Handle, task};
 
 use crate::{ctx::Ctx, output::Output};
 
 /// Sample user data structure for demonstrating JSON resource serving
 #[derive(Serialize, Deserialize)]
+#[allow(clippy::missing_docs_in_private_items)]
 struct User {
     id: u32,
     name: String,
@@ -35,6 +37,7 @@ struct User {
 
 /// Response structure for the users resource
 #[derive(Serialize, Deserialize)]
+#[allow(clippy::missing_docs_in_private_items)]
 struct UsersResponse {
     users: Vec<User>,
     total_count: usize,
@@ -43,6 +46,7 @@ struct UsersResponse {
 
 /// Information about a connected client
 #[derive(Clone, Debug)]
+#[allow(clippy::missing_docs_in_private_items)]
 struct ClientInfo {
     remote_addr: String,
     client_name: String,
@@ -52,6 +56,7 @@ struct ClientInfo {
 
 /// Shared state for the test server that can be accessed by both connections and the REPL
 #[derive(Clone)]
+#[allow(clippy::missing_docs_in_private_items)]
 struct TestServerState {
     request_counter: Arc<AtomicU64>,
     output: Output,
@@ -60,6 +65,7 @@ struct TestServerState {
     active_contexts: Arc<Mutex<HashMap<String, ServerCtx>>>,
 }
 
+#[allow(clippy::missing_docs_in_private_items)]
 impl TestServerState {
     fn new(output: Output, request_counter: Arc<AtomicU64>) -> Self {
         Self {
@@ -128,10 +134,12 @@ impl TestServerState {
 
 /// A test server connection that logs all interactions verbosely
 #[derive(Clone)]
+#[allow(clippy::missing_docs_in_private_items)]
 struct TestServerConn {
     state: TestServerState,
 }
 
+#[allow(clippy::missing_docs_in_private_items)]
 impl TestServerConn {
     fn new(state: TestServerState) -> Self {
         Self { state }
@@ -511,7 +519,7 @@ impl ServerHandler for TestServerConn {
 
                 GetPromptResult::new()
                     .with_description("A personalized greeting")
-                    .with_message(tmcp::schema::PromptMessage::user_text(message))
+                    .with_message(PromptMessage::user_text(message))
             }
             "code_review" => {
                 let language = arguments
@@ -529,7 +537,7 @@ impl ServerHandler for TestServerConn {
 
                 GetPromptResult::new()
                     .with_description("Code review request")
-                    .with_message(tmcp::schema::PromptMessage::user_text(review))
+                    .with_message(PromptMessage::user_text(review))
             }
             _ => return Err(Error::MethodNotFound(format!("Unknown prompt: {name}"))),
         };
@@ -688,9 +696,9 @@ impl ServerHandler for TestServerConn {
             .with_description("Server log entries for a specific date (YYYY-MM-DD)")
             .with_mime_type("text/plain")
             .with_annotations(
-                tmcp::schema::Annotations::new()
+                Annotations::new()
                     .with_priority(0.8)
-                    .with_audience(vec![tmcp::schema::Role::Assistant]),
+                    .with_audience(vec![Role::Assistant]),
             );
 
         let config_template =
@@ -707,7 +715,7 @@ impl ServerHandler for TestServerConn {
         .with_description("Historical data for a specific metric (period: 1h, 1d, 1w)")
         .with_mime_type("application/json")
         .with_annotations(
-            tmcp::schema::Annotations::new()
+            Annotations::new()
                 .with_priority(0.5)
                 .with_last_modified(chrono::Local::now().to_rfc3339()),
         );
@@ -754,7 +762,7 @@ fn run_interactive_repl_blocking(
     server_state: &TestServerState,
 ) -> crate::Result<()> {
     let mut rl = DefaultEditor::new()?;
-    let rt_handle = tokio::runtime::Handle::current();
+    let rt_handle = Handle::current();
 
     ctx.output.text("Interactive testserver console started")?;
     ctx.output
@@ -1036,7 +1044,7 @@ async fn handle_interactive_mode<F, Fut>(
 ) -> Result<()>
 where
     F: FnOnce() -> Fut,
-    Fut: std::future::Future<Output = Result<()>>,
+    Fut: Future<Output = Result<()>>,
 {
     _ = output.trace_success(format!("Listening on: {}", server_address));
     _ = output.text("Starting interactive mode...");

@@ -100,8 +100,7 @@ impl FromStr for LogLevel {
 #[allow(dead_code)]
 struct SolarizedDark;
 
-#[allow(dead_code)]
-#[allow(missing_docs)]
+#[allow(dead_code, clippy::missing_docs_in_private_items)]
 impl SolarizedDark {
     // Background tones
     const BASE03: Color = Color::Rgb(0, 43, 54); // darkest background
@@ -135,14 +134,19 @@ impl SolarizedDark {
 ///
 /// The struct is `Clone` and thread-safe, allowing it to be shared across different
 /// parts of the application.
-#[allow(missing_docs)]
 #[derive(Clone)]
 pub struct Output {
+    /// The standard output stream for writing to the terminal.
     stdout: Arc<Mutex<StandardStream>>,
+    /// Whether to output in JSON format.
     pub json: bool,
+    /// Whether to suppress non-essential output.
     pub quiet: bool,
+    /// Whether to use colored output.
     color: bool,
+    /// The terminal width for text wrapping.
     width: usize,
+    /// The current indentation level.
     indent: usize,
 }
 
@@ -414,7 +418,7 @@ impl Output {
         self.write_block_with_color(&message, &color_spec)
     }
 
-    // Helper method to reduce repetition
+    /// Helper method to write status messages with consistent formatting.
     fn status(
         &self,
         message: impl Into<String>,
@@ -549,8 +553,8 @@ impl Default for Output {
 /// the tracing ecosystem. It captures log events and forwards them to the Output
 /// struct for consistent formatting. This allows application logs to respect the
 /// same formatting rules (including JSON mode) as regular output.
-#[allow(missing_docs)]
 pub struct OutputLayer {
+    /// The output instance to forward logs to.
     output: Output,
 }
 
@@ -581,8 +585,8 @@ where
 /// This struct implements the `tracing::field::Visit` trait to extract the message
 /// field from tracing events. It's used internally by `OutputLayer` to get the
 /// actual log message text that needs to be formatted and displayed.
-#[allow(missing_docs)]
 struct MessageVisitor {
+    /// The extracted message text.
     message: String,
 }
 

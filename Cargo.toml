@@ -12,6 +12,54 @@ keywords = ["mcp", "anthropic", "claude", "openai", "llm", "cli"]
 resolver = "2"
 members = ["crates/*"]
 
+[workspace.dependencies]
+# Local dependencies
+tmcp = { path = "../tmcp/crates/tmcp" }
+libmcptool = { path = "crates/libmcptool" }
+
+# Core async runtime
+tokio = { version = "1", features = ["full"] }
+async-trait = "0.1"
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# CLI and terminal
+clap = { version = "4.5", features = ["derive"] }
+shell-words = "1.1"
+rustyline = "17"
+termcolor = "1.4"
+terminal_size = "0.4"
+atty = "0.2"
+textwrap = "0.16"
+syntect = "5.2"
+
+# Logging and tracing
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# HTTP and networking
+reqwest = { version = "0.12", features = ["json"] }
+url = "2.5"
+
+# OAuth and authentication
+oauth2 = { version = "5.0", features = ["reqwest"] }
+
+# Utilities
+chrono = { version = "0.4", features = ["serde"] }
+dirs = "6.0"
+thiserror = "2.0"
+anyhow = "1.0"
+open = "5.3"
+base64 = "0.22"
+
+# Build dependencies
+vergen-gix = { version = "1.0", features = ["build"] }
+
+# Dev dependencies
+tempfile = "3.8"
+
 [workspace.lints.rust]
 missing_docs = "warn"
 

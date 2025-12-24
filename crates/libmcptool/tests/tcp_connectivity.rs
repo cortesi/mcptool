@@ -1,3 +1,8 @@
+//! Integration tests for TCP connectivity functionality.
+#![allow(clippy::tests_outside_test_module)]
+
+use std::io::ErrorKind;
+
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
     net::{TcpListener, TcpStream},
@@ -66,8 +71,7 @@ async fn test_connection_refused() {
     let error = result.unwrap_err();
     // The error could be ConnectionRefused or AddrNotAvailable depending on the OS
     assert!(
-        error.kind() == std::io::ErrorKind::ConnectionRefused
-            || error.kind() == std::io::ErrorKind::AddrNotAvailable,
+        error.kind() == ErrorKind::ConnectionRefused || error.kind() == ErrorKind::AddrNotAvailable,
         "Expected ConnectionRefused or AddrNotAvailable, got {:?}",
         error.kind()
     );

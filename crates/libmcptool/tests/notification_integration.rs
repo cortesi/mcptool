@@ -1,4 +1,7 @@
-use std::time::Duration;
+//! Integration tests for notification handling functionality.
+#![allow(clippy::tests_outside_test_module)]
+
+use std::{error::Error, time::Duration};
 
 use libmcptool::{client, ctx::Ctx, target::Target};
 use tmcp::{
@@ -8,7 +11,11 @@ use tmcp::{
         ServerCapabilities, ServerNotification,
     },
 };
-use tokio::{sync::mpsc, time::timeout};
+use tokio::{
+    net::TcpListener,
+    sync::mpsc,
+    time::{sleep, timeout},
+};
 
 // Simple test server connection for integration tests
 #[derive(Clone)]
@@ -67,7 +74,7 @@ impl ClientHandler for SimpleTestClientConn {
 }
 
 #[tokio::test]
-async fn test_set_level_command_notifications_via_tcp() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_set_level_command_notifications_via_tcp() -> Result<(), Box<dyn Error>> {
     // Create a temporary directory for the test
     let temp_dir = tempfile::tempdir()?;
     let config_path = temp_dir.path().to_path_buf();
@@ -80,7 +87,7 @@ async fn test_set_level_command_notifications_via_tcp() -> Result<(), Box<dyn st
     let (server_notification_sender, mut server_notification_receiver) = mpsc::unbounded_channel();
 
     // Get a random available port
-    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await?;
+    let listener = TcpListener::bind("127.0.0.1:0").await?;
     let port = listener.local_addr()?.port();
     drop(listener); // Release the port so server can bind to it
 
@@ -97,7 +104,7 @@ async fn test_set_level_command_notifications_via_tcp() -> Result<(), Box<dyn st
     });
 
     // Wait a bit for server to start
-    tokio::time::sleep(Duration::from_millis(100)).await;
+    sleep(Duration::from_millis(100)).await;
 
     // Connect to the testserver via TCP
     let target = Target::parse(&format!("tcp://127.0.0.1:{}", port))?;

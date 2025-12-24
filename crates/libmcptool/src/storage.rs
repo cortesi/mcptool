@@ -27,7 +27,9 @@ pub struct StoredAuth {
     pub scopes: Vec<String>,
 }
 
+/// Storage for authentication tokens and credentials.
 pub struct TokenStorage {
+    /// Directory where configuration files are stored.
     config_dir: PathBuf,
 }
 
@@ -85,6 +87,7 @@ impl TokenStorage {
         Ok(auths)
     }
 
+    /// Loads all authentication data from the storage file.
     fn load_all_auth_data(&self) -> Result<HashMap<String, StoredAuth>, StorageError> {
         let auth_path = self.config_dir.join("auth.json");
 

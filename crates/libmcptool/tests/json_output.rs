@@ -1,7 +1,11 @@
+//! Integration tests for JSON output formatting.
+#![allow(clippy::tests_outside_test_module)]
+
 use std::collections::HashMap;
 
 use libmcptool::output::{Output, listtools};
 use serde_json::json;
+use tmcp::schema::{ListToolsResult, Tool, ToolSchema};
 
 #[test]
 fn test_list_tools_result_json_output() {
@@ -15,15 +19,15 @@ fn test_list_tools_result_json_output() {
         }),
     );
 
-    let input_schema = tmcp::schema::ToolSchema {
+    let input_schema = ToolSchema {
         schema_type: "object".to_string(),
         properties: Some(properties),
         required: Some(vec!["param1".to_string()]),
     };
 
-    let tool = tmcp::schema::Tool::new("test_tool", input_schema).with_description("A test tool");
+    let tool = Tool::new("test_tool", input_schema).with_description("A test tool");
 
-    let tools_result = tmcp::schema::ListToolsResult {
+    let tools_result = ListToolsResult {
         tools: vec![tool],
         next_cursor: None,
     };
@@ -42,7 +46,7 @@ fn test_list_tools_result_json_output() {
 #[test]
 fn test_list_tools_result_empty_tools() {
     // Create an empty ListToolsResult
-    let tools_result = tmcp::schema::ListToolsResult {
+    let tools_result = ListToolsResult {
         tools: vec![],
         next_cursor: None,
     };

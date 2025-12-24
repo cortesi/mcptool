@@ -1,3 +1,6 @@
+//! Integration tests for JSON syntax highlighting functionality.
+#![allow(clippy::tests_outside_test_module)]
+
 use libmcptool::output::Output;
 use serde_json::json;
 

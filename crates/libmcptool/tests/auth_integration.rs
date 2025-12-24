@@ -1,11 +1,17 @@
-use std::time::{Duration, SystemTime};
+//! Integration tests for authentication storage functionality.
+#![allow(clippy::tests_outside_test_module)]
+
+use std::{
+    env, process,
+    time::{Duration, SystemTime},
+};
 
 use libmcptool::storage::{StorageError, StoredAuth, TokenStorage};
 
 fn create_test_storage() -> TokenStorage {
-    let test_dir = std::env::temp_dir().join("mcptool_test").join(format!(
+    let test_dir = env::temp_dir().join("mcptool_test").join(format!(
         "test_{}_{}",
-        std::process::id(),
+        process::id(),
         SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)
             .unwrap()
@@ -18,7 +24,7 @@ fn create_test_storage() -> TokenStorage {
 #[test]
 fn test_auth_storage_lifecycle() {
     // Create a unique test auth entry
-    let test_name = format!("test_auth_{}", std::process::id());
+    let test_name = format!("test_auth_{}", process::id());
 
     let storage = create_test_storage();
 

@@ -6,36 +6,15 @@ authors.workspace = true
 license.workspace = true
 repository.workspace = true
 
-
 [dependencies]
-libmcptool = { path = "../libmcptool" }
+libmcptool.workspace = true
+tmcp.workspace = true
 
-tmcp = { path = "../../../tmcp/crates/tmcp" }
-
-clap = { version = "4.5.40", features = ["derive"] }
-shell-words = "1.1"
-rustyline = "17"
-tokio = { version = "1", features = ["full"] }
-serde_json = "1.0.140"
-async-trait = "0.1"
-chrono = { version = "0.4", features = ["serde"] }
-termcolor = "1.4.1"
-terminal_size = "0.4"
-tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
-serde = { version = "1.0", features = ["derive"] }
-dirs = "6.0"
-thiserror = "2.0"
-open = "5.3"
-url = "2.5"
-oauth2 = { version = "5.0", features = ["reqwest"] }
-reqwest = { version = "0.12", features = ["json"] }
-anyhow = "1.0.98"
-atty = "0.2"
-
-[build-dependencies]
-anyhow = "1.0.98"
-vergen-gix = { version = "1.0.9", features = ["build"] }
+atty.workspace = true
+clap.workspace = true
+dirs.workspace = true
+terminal_size.workspace = true
+tokio.workspace = true
 
 [lints]
 workspace = true
