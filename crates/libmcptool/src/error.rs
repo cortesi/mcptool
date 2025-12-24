@@ -1,13 +1,11 @@
 //! Error types for mcptool.
 
-use std::io;
+use std::{io, result};
 
 use rustyline::error::ReadlineError;
 use thiserror::Error;
 
 use crate::storage::StorageError;
-
-use std::result;
 
 /// Type alias for Results using our Error type.
 pub type Result<T> = result::Result<T, Error>;

@@ -1,7 +1,6 @@
 use tmcp::schema::ListResourceTemplatesResult;
 
-use crate::Result;
-use crate::output::Output;
+use crate::{Result, output::Output};
 
 /// Display the list of resource templates in either JSON or formatted text
 pub fn list_resource_templates_result(

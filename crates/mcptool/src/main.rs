@@ -1,7 +1,6 @@
 //! mcptool CLI application for interacting with MCP servers.
 #![allow(clippy::missing_docs_in_private_items)]
-use std::error::Error;
-use std::path::PathBuf;
+use std::{error::Error, path::PathBuf};
 
 use clap::{Args, Parser, Subcommand};
 use libmcptool::{

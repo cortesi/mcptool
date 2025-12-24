@@ -103,8 +103,9 @@ impl TokenStorage {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::{env, process, time::UNIX_EPOCH};
+
+    use super::*;
 
     #[test]
     fn test_storage_lifecycle() {

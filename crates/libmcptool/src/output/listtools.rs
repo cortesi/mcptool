@@ -1,7 +1,6 @@
 use tmcp::schema::{ListToolsResult, ToolSchema};
 
-use crate::Result;
-use crate::output::Output;
+use crate::{Result, output::Output};
 
 /// Formats a tool schema.
 fn toolschema(output: &Output, schema: &ToolSchema) -> Result<()> {

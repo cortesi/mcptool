@@ -1,8 +1,7 @@
 //! Integration tests for MCP initialization functionality.
 #![allow(clippy::tests_outside_test_module)]
 
-use std::collections::HashMap;
-use std::time::Duration;
+use std::{collections::HashMap, time::Duration};
 
 use libmcptool::{client, ctx::Ctx, mcp, output::Output, target::Target};
 use tempfile::TempDir;

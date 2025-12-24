@@ -5,8 +5,7 @@ use std::{
 
 use rustyline::DefaultEditor;
 use tmcp::auth::{OAuth2CallbackServer, OAuth2Client, OAuth2Config, OAuth2Token};
-use tokio::signal;
-use tokio::time::timeout;
+use tokio::{signal, time::timeout};
 
 use crate::{
     Error, Result, auth::validate_auth_name, ctx::Ctx, output::Output, storage::StoredAuth,

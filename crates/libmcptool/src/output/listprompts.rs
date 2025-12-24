@@ -1,7 +1,6 @@
 use tmcp::schema::ListPromptsResult;
 
-use crate::Result;
-use crate::output::Output;
+use crate::{Result, output::Output};
 
 /// Display the list of prompts in either JSON or formatted text
 pub fn list_prompts_result(output: &Output, prompts_result: &ListPromptsResult) -> Result<()> {

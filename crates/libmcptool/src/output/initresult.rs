@@ -1,7 +1,6 @@
 use tmcp::schema::InitializeResult;
 
-use crate::Result;
-use crate::output::Output;
+use crate::{Result, output::Output};
 
 /// Display the initialization result in either JSON or formatted text
 pub fn init_result(output: &Output, init_result: &InitializeResult) -> Result<()> {

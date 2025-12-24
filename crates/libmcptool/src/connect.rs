@@ -3,8 +3,7 @@
 use clap::Parser;
 use rustyline::{DefaultEditor, error::ReadlineError};
 use tmcp::{ClientCtx, ClientHandler, Result as McpResult, schema::ServerNotification};
-use tokio::sync::mpsc;
-use tokio::task;
+use tokio::{sync::mpsc, task};
 
 use crate::{
     Result, client,
