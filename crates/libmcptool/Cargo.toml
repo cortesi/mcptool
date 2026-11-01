@@ -10,6 +10,7 @@ keywords.workspace = true
 
 [dependencies]
 tmcp.workspace = true
+tmcp-http.workspace = true
 
 anyhow.workspace = true
 async-trait.workspace = true

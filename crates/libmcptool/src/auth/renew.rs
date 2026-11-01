@@ -1,6 +1,6 @@
 use std::time::{Duration, SystemTime};
 
-use tmcp::auth::{OAuth2Client, OAuth2Config, OAuth2Token};
+use tmcp_http::auth::{OAuth2Client, OAuth2Config, OAuth2Token};
 
 use crate::{Error, Result, ctx::Ctx};
 

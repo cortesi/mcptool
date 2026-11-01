@@ -14,7 +14,8 @@ members = ["crates/*"]
 
 [workspace.dependencies]
 # Local dependencies
-tmcp = { version = "0.5.0", path = "../tmcp/crates/tmcp", features = ["auth"] }
+tmcp = { version = "0.6.0", path = "../tmcp/crates/tmcp" }
+tmcp-http = { version = "0.6.0", path = "../tmcp/crates/tmcp-http" }
 libmcptool = { path = "crates/libmcptool" }
 
 # Core async runtime

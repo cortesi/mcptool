@@ -9,6 +9,7 @@ repository.workspace = true
 [dependencies]
 libmcptool.workspace = true
 tmcp.workspace = true
+tmcp-http.workspace = true
 
 atty.workspace = true
 clap.workspace = true

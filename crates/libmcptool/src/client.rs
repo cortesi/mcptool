@@ -2,11 +2,9 @@
 
 use std::sync::Arc;
 
-use tmcp::{
-    Client, ClientHandler,
-    auth::{OAuth2Client, OAuth2Config, OAuth2Token},
-    schema::InitializeResult,
-};
+use tmcp_http::{ClientHttpExt};
+use tmcp::{Client, ClientHandler, schema::InitializeResult};
+use tmcp_http::{auth::{OAuth2Client, OAuth2Config, OAuth2Token}};
 
 use crate::{
     Error, Result,

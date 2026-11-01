@@ -1,7 +1,7 @@
 use std::{net::TcpListener, time::Duration};
 
 use rustyline::DefaultEditor;
-use tmcp::auth::{OAuth2CallbackServer, OAuth2Client, OAuth2Config};
+use tmcp_http::auth::{OAuth2CallbackServer, OAuth2Client, OAuth2Config};
 use tokio::{signal, time::timeout};
 
 use crate::{
